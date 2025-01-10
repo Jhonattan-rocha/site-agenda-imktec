@@ -41,9 +41,6 @@ function* UpdateUser({ payload }) {
         }
         const response = yield call(axios.put, `${alias}`+`/user/${payload.id}`, payload);
         yield put(actions.USER_UPDATE_SUCCESS({ ...response.data }));
-
-        yield put(custom_field_values_actions.CREATE_OR_UPDATE_FIELD_VALUE_REQUEST({...payload, response_id: response.data.id}))
-
     } catch (err) {
         console.log(err)
         yield put(actions.USER_UPDATE_FALURE({error: err}));

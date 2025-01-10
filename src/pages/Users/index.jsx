@@ -112,21 +112,25 @@ function UsersPage(){
   };
 
   const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    try{
+      const { name, value } = event.target;
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
+    }catch(err){
+      console.log(err);
+    }
   };
 
   const handleSubmit = () => {
     if (selectedUser) {
-      dispatch(user_actions.USER_UPDATE_REQUEST({...selectedUser}));
+      dispatch(user_actions.USER_UPDATE_REQUEST({...formData, id: selectedUser.id}));
     } else {
       const newUser = {
         ...formData
       };
-      dispatch(user_actions.USER_UPDATE_REQUEST(newUser));
+      dispatch(user_actions.USER_CREATE_REQUEST(newUser));
     }
     handleClose();
     setUpdate(true);
@@ -145,6 +149,7 @@ function UsersPage(){
       profile_id: user.profile_id,
     });
     handleClickOpen();
+    setUpdate(true);
   };
 
   return (
@@ -243,11 +248,12 @@ function UsersPage(){
               name="profile_id"
               value={formData.profile_id}
               onChange={handleInputChange}
+              style={{ color: theme.palette.text.third }}
             >
                 {profiles.map((profile) => (
-                <MenuItem key={profile.id} value={profile.id}>
-                    {profile.name}
-                </MenuItem>
+                  <MenuItem key={profile.id} value={profile.id} style={{ color: theme.palette.text.third }}>
+                      {profile.name}
+                  </MenuItem>
                 ))}
             </Select>
           </FormControl>

@@ -99,35 +99,37 @@ function ProfilesPage(){
         setOpen(false);
         setSelectedProfile(null);
         setFormData({
-        name: '',
-        permissions: [],
+            name: '',
+            permissions: [],
         });
+        setUpdate(true);
     };
 
     const handleInputChange = (event) => {
         const { name, value } = event.target;
         setFormData((prevData) => ({
-        ...prevData,
-        [name]: value,
+            ...prevData,
+            [name]: value,
         }));
     };
 
-    const handlePermissionChange = (permissionId, field, value) => {
+    const handlePermissionChange = (entity, field, value) => {
         setFormData((prevData) => {
             let updatedPermissions = prevData.permissions.map((p) =>
-                p.id === permissionId ? { ...p, [field]: value } : p
+                p.entity_name === entity ? { ...p, [field]: value } : p
             );
 
-            const permissionExists = updatedPermissions.some((p) => p.id === permissionId);
+            const permissionExists = updatedPermissions.some((p) => p.entity_name === entity);
 
             if (!permissionExists) {
                 const newPermission = {
+                    entity_name: entity,
                     can_view: false,
                     can_create: false,
                     can_update: false,
                     can_delete: false,
                 }
-                updatedPermissions.push(newPermission);
+                updatedPermissions.push({...newPermission, [field]: value});
             }
 
             return {
@@ -149,8 +151,8 @@ function ProfilesPage(){
         setUpdate(true);
     };
 
-    const handleDelete = (profileId) => {
-        dispatch(profile_actions.USER_PROFILES_DELETE_REQUEST({id: profileId}));
+    const handleDelete = (profile) => {
+        dispatch(profile_actions.USER_PROFILES_DELETE_REQUEST({...profile}));
         setUpdate(true);
     };
 
@@ -161,6 +163,7 @@ function ProfilesPage(){
             permissions: profile.permissions,
         });
         handleClickOpen();
+        setUpdate(true);
     };
 
     // Lista de entidades para as quais você deseja gerenciar permissões
@@ -188,12 +191,13 @@ function ProfilesPage(){
                         </StyledTableCell>
                         <StyledTableCell>{profile.name}</StyledTableCell>
                         <StyledTableCell align="right">
-                        <IconButton aria-label="edit" onClick={() => handleEdit(profile)}>
+                        <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(profile)}>
                             <Edit />
                         </IconButton>
                         <IconButton
                             aria-label="delete"
-                            onClick={() => handleDelete(profile.id)}
+                            onClick={() => handleDelete(profile)}
+                            style={{ width: 40 }}
                         >
                             <Delete />
                         </IconButton>
@@ -225,6 +229,7 @@ function ProfilesPage(){
                 variant="standard"
                 value={formData.name}
                 onChange={handleInputChange}
+                required
             />
             <Typography variant="h6" gutterBottom>
                     Permissões
@@ -251,7 +256,7 @@ function ProfilesPage(){
                                         <Checkbox
                                             checked={permission.can_view || false}
                                             onChange={(e) =>
-                                                handlePermissionChange(permission.id, 'can_view', e.target.checked)
+                                                handlePermissionChange(entity, 'can_view', e.target.checked)
                                             }
                                         />
                                     }
@@ -263,7 +268,7 @@ function ProfilesPage(){
                                         <Checkbox
                                             checked={permission.can_create || false}
                                             onChange={(e) =>
-                                                handlePermissionChange(permission.id, 'can_create', e.target.checked)
+                                                handlePermissionChange(entity, 'can_create', e.target.checked)
                                             }
                                         />
                                     }
@@ -275,7 +280,7 @@ function ProfilesPage(){
                                         <Checkbox
                                             checked={permission.can_update || false}
                                             onChange={(e) =>
-                                                handlePermissionChange(permission.id, 'can_update', e.target.checked)
+                                                handlePermissionChange(entity, 'can_update', e.target.checked)
                                             }
                                         />
                                     }
@@ -287,7 +292,7 @@ function ProfilesPage(){
                                         <Checkbox
                                             checked={permission.can_delete || false}
                                             onChange={(e) =>
-                                                handlePermissionChange(permission.id, 'can_delete', e.target.checked)
+                                                handlePermissionChange(entity, 'can_delete', e.target.checked)
                                             }
                                         />
                                     }

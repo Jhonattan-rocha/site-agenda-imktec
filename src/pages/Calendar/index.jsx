@@ -198,7 +198,7 @@ function CalendarPage(){
   const [selectedEvent, setSelectedEvent] = useState(null);
   const events = useSelector(state => state.eventsReducer.events);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(true);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [update, setUpdate] = useState(true);
   const dispatch = useDispatch();
   const [eventFormData, setEventFormData] = useState({
@@ -381,7 +381,7 @@ function CalendarPage(){
   return (
     <Grid container>
       <Grid
-        item
+        item={"true"}
         xs={12}
         md={drawerOpen ? 9 : 12}
         sx={{
@@ -600,7 +600,7 @@ function CalendarPage(){
                         {eventsForSelectedDay.map((event) => (
                             <ListItem
                                 key={event.id}
-                                button
+                                button={"true"}
                                 onClick={() => {
                                     setSelectedEvent(event);
                                 }}

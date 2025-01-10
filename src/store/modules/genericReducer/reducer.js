@@ -3,17 +3,8 @@ import { toast } from 'react-toastify';
 
 const initialState = {
     generics: {
-        "ProductCategory": [],
-        "CustomEntityToEntity": [],
         "User": [],
         "UserProfile": [],
-        "SubCategory": [],
-        "InputOutputStock": [],
-        "Company": [],
-        "Category": [],
-        "Employees": [],
-        "Product": [],
-        "Person": []
     },
 }
 

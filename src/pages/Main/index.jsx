@@ -19,16 +19,13 @@ import {
   AccountCircle,
   Notifications,
   Settings,
-  Dashboard,
   ExitToApp,
   ArrowLeft,
   ArrowRight,
-  Description as DocumentIcon,
-  PictureAsPdf as PdfIcon,
   CalendarMonth,
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
-import { BrowserRouter as Router, Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
+import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
 import Login from '../Login';
 import CalendarPage from '../Calendar';
 import { useSelector } from 'react-redux';
@@ -39,7 +36,7 @@ import { AiFillProfile } from 'react-icons/ai';
 
 // Estilos personalizados (mantidos do exemplo anterior)
 const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
-  width: expanded ? 250 : 64,
+  width: expanded === "true" ? 250 : 64,
   transition: theme.transitions.create(['width', 'margin'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
@@ -72,7 +69,7 @@ const MenuOptions = styled(List)(({ theme }) => ({
 }));
 
 const MenuItem = styled(ListItem)(({ theme, expanded }) => ({
-  justifyContent: expanded ? 'initial' : 'center',
+  justifyContent: expanded === "true" ? 'initial' : 'center',
   padding: theme.spacing(1, 2),
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
@@ -92,7 +89,7 @@ const MenuItem = styled(ListItem)(({ theme, expanded }) => ({
 
 const MenuItemIcon = styled(ListItemIcon)(({ theme, expanded }) => ({
   minWidth: 0,
-  marginRight: expanded ? theme.spacing(2) : 'auto',
+  marginRight: expanded === "true" ? theme.spacing(2) : 'auto',
   justifyContent: 'center',
   color: theme.palette.text.secondary,
 }));
@@ -115,7 +112,7 @@ const Content = styled(Box)(({ theme, expanded }) => ({
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: expanded ? 250 : 64,
+  marginLeft: expanded === "true" ? 250 : 64,
   marginTop: 64,
   backgroundColor: theme.palette.background.default,
 }));
@@ -148,14 +145,17 @@ function Home(){
   };
 
   useEffect(() => {
-    if(!user.isLoading){
+    if(!user.isLoggedIn){
       navigate("/login");
     }
   }, []);
-
+  
   return (
       <AppContainer container="true">
-        <StyledAppBar position="fixed" expanded={expanded}>
+        {!user.isLoggedIn ? (
+          null
+        ):(
+          <StyledAppBar position="fixed" expanded={(() => {return expanded ? "true":"false"})()}>
           <StyledToolbar>
             <IconButton
               color="inherit"
@@ -240,20 +240,20 @@ function Home(){
             <Divider sx={{ my: 2, width: '80%', borderColor: 'rgba(255,255,255,0.2)' }} />
 
             <MenuOptions>
-                <MenuItem button="true" expanded={expanded} component={RouterLink} to="/calendar" disableripple="true">
-                    <MenuItemIcon expanded={expanded}>
+                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/calendar" disableripple="true">
+                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
                         <CalendarMonth />
                     </MenuItemIcon>
                     {expanded && <MenuItemText primary="Calendario" />}
                 </MenuItem>
-                <MenuItem button="true" expanded={expanded} component={RouterLink} to="/users" disableripple="true">
-                    <MenuItemIcon expanded={expanded}>
+                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/users" disableripple="true">
+                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
                         <FaUser />
                     </MenuItemIcon>
                     {expanded && <MenuItemText primary="Usuários" />}
                 </MenuItem>
-                <MenuItem button="true" expanded={expanded} component={RouterLink} to="/profiles" disableripple="true">
-                    <MenuItemIcon expanded={expanded}>
+                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/profiles" disableripple="true">
+                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
                         <AiFillProfile />
                     </MenuItemIcon>
                     {expanded && <MenuItemText primary="Perfís" />}
@@ -261,7 +261,8 @@ function Home(){
             </MenuOptions>
           </StyledToolbar>
         </StyledAppBar>
-        <Content expanded={expanded}>
+        )}
+        <Content expanded={(() => {return expanded ? "true":"false"})()}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/calendar" element={<CalendarPage />} />
