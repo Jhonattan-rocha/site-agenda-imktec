@@ -27,7 +27,8 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import * as profile_actions from '../../store/modules/userProfileReducer/actions';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../styles/AppThemeProvider';
 
 // Estilos
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -81,6 +82,7 @@ function ProfilesPage(){
     });
     const [update, setUpdate] = useState(true);
     const dispatch = useDispatch();
+    const theme = useTheme();
 
     useEffect(() => {
         if(update){
@@ -119,12 +121,13 @@ function ProfilesPage(){
             const permissionExists = updatedPermissions.some((p) => p.id === permissionId);
 
             if (!permissionExists) {
-                const newPermission = mockProfiles
-                    .flatMap((profile) => profile.permissions)
-                    .find((p) => p.id === permissionId);
-                if (newPermission) {
-                    updatedPermissions.push({ ...newPermission, [field]: value });
+                const newPermission = {
+                    can_view: false,
+                    can_create: false,
+                    can_update: false,
+                    can_delete: false,
                 }
+                updatedPermissions.push(newPermission);
             }
 
             return {
@@ -161,30 +164,30 @@ function ProfilesPage(){
     };
 
     // Lista de entidades para as quais você deseja gerenciar permissões
-    const entities = ['users', 'profiles'];
+    const entities = ['Usuários', 'perfís'];
 
     return (
         <Box p={2}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" style={{ color: theme.palette.text.primary}} gutterBottom>
             Perfis
         </Typography>
         <StyledTableContainer component={Paper}>
             <Table aria-label="simple table">
             <TableHead>
                 <TableRow>
-                <TableCell>ID</TableCell>
-                <TableCell>Nome</TableCell>
-                <TableCell align="right">Ações</TableCell>
+                <StyledTableCell>ID</StyledTableCell>
+                <StyledTableCell>Nome</StyledTableCell>
+                <StyledTableCell align="right">Ações</StyledTableCell>
                 </TableRow>
             </TableHead>
             <TableBody>
                 {profiles.map((profile) => (
                     <TableRow key={profile.id}>
-                        <TableCell component="th" scope="row">
+                        <StyledTableCell component="th" scope="row">
                             {profile.id}
-                        </TableCell>
-                        <TableCell>{profile.name}</TableCell>
-                        <TableCell align="right">
+                        </StyledTableCell>
+                        <StyledTableCell>{profile.name}</StyledTableCell>
+                        <StyledTableCell align="right">
                         <IconButton aria-label="edit" onClick={() => handleEdit(profile)}>
                             <Edit />
                         </IconButton>
@@ -194,7 +197,7 @@ function ProfilesPage(){
                         >
                             <Delete />
                         </IconButton>
-                        </TableCell>
+                        </StyledTableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -212,7 +215,7 @@ function ProfilesPage(){
             {selectedProfile ? 'Editar Perfil' : 'Adicionar Perfil'}
             </DialogTitle>
             <DialogContent>
-            <TextField
+            <TextFieldStyled
                 autoFocus
                 margin="dense"
                 name="name"
@@ -240,7 +243,7 @@ function ProfilesPage(){
 
                         return (
                             <Box key={entity}>
-                                <Typography variant="subtitle1" gutterBottom>
+                                <Typography variant="subtitle1" style={{ color: theme.palette.text.third}} gutterBottom>
                                     {entity.charAt(0).toUpperCase() + entity.slice(1)}
                                 </Typography>
                                 <FormControlLabel
@@ -253,6 +256,7 @@ function ProfilesPage(){
                                         />
                                     }
                                     label="Visualizar"
+                                    style={{ color: theme.palette.text.third}}
                                 />
                                 <FormControlLabel
                                     control={
@@ -264,6 +268,7 @@ function ProfilesPage(){
                                         />
                                     }
                                     label="Criar"
+                                    style={{ color: theme.palette.text.third}}
                                 />
                                 <FormControlLabel
                                     control={
@@ -275,6 +280,7 @@ function ProfilesPage(){
                                         />
                                     }
                                     label="Atualizar"
+                                    style={{ color: theme.palette.text.third}}
                                 />
                                 <FormControlLabel
                                     control={
@@ -286,6 +292,7 @@ function ProfilesPage(){
                                         />
                                     }
                                     label="Deletar"
+                                    style={{ color: theme.palette.text.third}}
                                 />
                             </Box>
                         );
