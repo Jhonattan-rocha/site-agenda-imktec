@@ -34,10 +34,6 @@ export default createGlobalStyle`
         color: black;
     }
 
-    html, body, #root{
-        height: 100%;
-    }
-
     #root{
         display: flex;
         align-items: start;

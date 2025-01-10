@@ -1,0 +1,306 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+  Paper,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+} from '@mui/material';
+import {
+  Add,
+  Delete,
+  Edit,
+} from '@mui/icons-material';
+import { styled } from '@mui/system';
+import * as profile_actions from '../../store/modules/userProfileReducer/actions';
+import { useDispatch } from 'react-redux';
+
+// Estilos
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+}));
+
+const StyledFab = styled(Button)(({ theme }) => ({
+    marginTop: theme.spacing(2),
+    // Coloca o botão no canto inferior direito
+    position: 'absolute',
+    top: theme.spacing(2),
+    right: theme.spacing(2),
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    color: theme.palette.text.third
+}));
+
+const TextFieldStyled = styled(TextField)(({ theme }) => ({
+    '& .MuiInput-root': {
+      color: theme.palette.text.third, // Cor do texto digitado
+      borderColor: theme.palette.primary.contrastText,
+      '&:before': {
+        borderColor: theme.palette.primary.contrastText, // Cor da linha antes de focar
+      },
+      '&:hover:not(.Mui-disabled):before': {
+        borderColor: theme.palette.primary.main, // Cor da linha no hover
+      },
+      '&:after': {
+        borderColor: theme.palette.primary.main, // Cor da linha ao focar
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: theme.palette.text.third,
+      '&.Mui-focused': {
+        color: theme.palette.primary.main,
+      },
+    },
+    '& .MuiSvgIcon-root': {
+      color: theme.palette.text.third,
+    },
+}));
+
+function ProfilesPage(){
+    const profiles = useSelector(state => state.userprofilereducer.profiles)
+    const [open, setOpen] = useState(false);
+    const [selectedProfile, setSelectedProfile] = useState(null);
+    const [formData, setFormData] = useState({
+        name: '',
+        permissions: [],
+    });
+    const [update, setUpdate] = useState(true);
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if(update){
+            dispatch(profile_actions.USER_PROFILES_REQUEST({skip: 0, limit: 0, filters: ""}));
+            setUpdate(false);
+        }
+    }, [update]);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setSelectedProfile(null);
+        setFormData({
+        name: '',
+        permissions: [],
+        });
+    };
+
+    const handleInputChange = (event) => {
+        const { name, value } = event.target;
+        setFormData((prevData) => ({
+        ...prevData,
+        [name]: value,
+        }));
+    };
+
+    const handlePermissionChange = (permissionId, field, value) => {
+        setFormData((prevData) => {
+            let updatedPermissions = prevData.permissions.map((p) =>
+                p.id === permissionId ? { ...p, [field]: value } : p
+            );
+
+            const permissionExists = updatedPermissions.some((p) => p.id === permissionId);
+
+            if (!permissionExists) {
+                const newPermission = mockProfiles
+                    .flatMap((profile) => profile.permissions)
+                    .find((p) => p.id === permissionId);
+                if (newPermission) {
+                    updatedPermissions.push({ ...newPermission, [field]: value });
+                }
+            }
+
+            return {
+                ...prevData,
+                permissions: updatedPermissions,
+            };
+        });
+    };
+
+    const handleSubmit = () => {
+        if (selectedProfile) {
+            dispatch(profile_actions.USER_PROFILES_UPDATE_REQUEST({...selectedProfile}));
+        } else {
+            dispatch(profile_actions.USER_PROFILES_CREATE_REQUEST({
+                ...formData,
+            }));
+        }
+        handleClose();
+        setUpdate(true);
+    };
+
+    const handleDelete = (profileId) => {
+        dispatch(profile_actions.USER_PROFILES_DELETE_REQUEST({id: profileId}));
+        setUpdate(true);
+    };
+
+    const handleEdit = (profile) => {
+        setSelectedProfile(profile);
+        setFormData({
+            name: profile.name,
+            permissions: profile.permissions,
+        });
+        handleClickOpen();
+    };
+
+    // Lista de entidades para as quais você deseja gerenciar permissões
+    const entities = ['users', 'profiles'];
+
+    return (
+        <Box p={2}>
+        <Typography variant="h4" gutterBottom>
+            Perfis
+        </Typography>
+        <StyledTableContainer component={Paper}>
+            <Table aria-label="simple table">
+            <TableHead>
+                <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell>Nome</TableCell>
+                <TableCell align="right">Ações</TableCell>
+                </TableRow>
+            </TableHead>
+            <TableBody>
+                {profiles.map((profile) => (
+                    <TableRow key={profile.id}>
+                        <TableCell component="th" scope="row">
+                            {profile.id}
+                        </TableCell>
+                        <TableCell>{profile.name}</TableCell>
+                        <TableCell align="right">
+                        <IconButton aria-label="edit" onClick={() => handleEdit(profile)}>
+                            <Edit />
+                        </IconButton>
+                        <IconButton
+                            aria-label="delete"
+                            onClick={() => handleDelete(profile.id)}
+                        >
+                            <Delete />
+                        </IconButton>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+            </Table>
+        </StyledTableContainer>
+        <StyledFab
+            color="primary"
+            aria-label="add"
+            onClick={handleClickOpen}
+        >
+            <Add />
+        </StyledFab>
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+            <DialogTitle>
+            {selectedProfile ? 'Editar Perfil' : 'Adicionar Perfil'}
+            </DialogTitle>
+            <DialogContent>
+            <TextField
+                autoFocus
+                margin="dense"
+                name="name"
+                label="Nome"
+                type="text"
+                fullWidth
+                variant="standard"
+                value={formData.name}
+                onChange={handleInputChange}
+            />
+            <Typography variant="h6" gutterBottom>
+                    Permissões
+                </Typography>
+                <FormGroup>
+                    {entities.map((entity) => {
+                        const permission = formData.permissions.find(
+                            (p) => p.entity_name === entity
+                        ) || {
+                            entity_name: entity,
+                            can_view: false,
+                            can_create: false,
+                            can_update: false,
+                            can_delete: false,
+                        };
+
+                        return (
+                            <Box key={entity}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {entity.charAt(0).toUpperCase() + entity.slice(1)}
+                                </Typography>
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={permission.can_view || false}
+                                            onChange={(e) =>
+                                                handlePermissionChange(permission.id, 'can_view', e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Visualizar"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={permission.can_create || false}
+                                            onChange={(e) =>
+                                                handlePermissionChange(permission.id, 'can_create', e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Criar"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={permission.can_update || false}
+                                            onChange={(e) =>
+                                                handlePermissionChange(permission.id, 'can_update', e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Atualizar"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={permission.can_delete || false}
+                                            onChange={(e) =>
+                                                handlePermissionChange(permission.id, 'can_delete', e.target.checked)
+                                            }
+                                        />
+                                    }
+                                    label="Deletar"
+                                />
+                            </Box>
+                        );
+                    })}
+                </FormGroup>
+            </DialogContent>
+            <DialogActions>
+            <Button onClick={handleClose}>Cancelar</Button>
+            <Button onClick={handleSubmit}>
+                {selectedProfile ? 'Salvar' : 'Adicionar'}
+            </Button>
+            </DialogActions>
+        </Dialog>
+        </Box>
+    );
+};
+
+export default ProfilesPage;

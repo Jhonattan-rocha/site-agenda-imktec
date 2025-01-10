@@ -198,8 +198,8 @@ function CalendarPage(){
   const [selectedEvent, setSelectedEvent] = useState(null);
   const events = useSelector(state => state.eventsReducer.events);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [update, setUpdate] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(true);
+  const [update, setUpdate] = useState(true);
   const dispatch = useDispatch();
   const [eventFormData, setEventFormData] = useState({
     name: '',
@@ -241,6 +241,7 @@ function CalendarPage(){
       ready: false,
     });
     setIsTaskModalOpen(false);
+    setUpdate(true);
   };
 
   const handleEditTask = () => {
@@ -343,12 +344,6 @@ function CalendarPage(){
 
   const handleDateChange = (date) => {
     setCurrentDate(date);
-    if (view === 'week') {
-      const weekStart = startOfWeek(date, { weekStartsOn: 0 });
-      const weekEnd = endOfWeek(date, { weekStartsOn: 0 });
-      console.log('Início da semana: ', format(weekStart, 'dd/MM/yyyy'));
-      console.log('Fim da semana: ', format(weekEnd, 'dd/MM/yyyy'));
-    }
   };
 
   const handleEventClick = (event, day) => {
@@ -382,7 +377,7 @@ function CalendarPage(){
       setSelectedEvent(updatedSelectedEvent);
     }
   }, [events, selectedEvent]);
-  console.log(selectedEvent);
+  
   return (
     <Grid container>
       <Grid

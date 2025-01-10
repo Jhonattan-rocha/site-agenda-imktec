@@ -32,6 +32,10 @@ import { BrowserRouter as Router, Routes, Route, Link as RouterLink, useNavigate
 import Login from '../Login';
 import CalendarPage from '../Calendar';
 import { useSelector } from 'react-redux';
+import UsersPage from '../Users';
+import { FaUser } from 'react-icons/fa';
+import ProfilesPage from '../Profiles';
+import { AiFillProfile } from 'react-icons/ai';
 
 // Estilos personalizados (mantidos do exemplo anterior)
 const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
@@ -242,6 +246,18 @@ function Home(){
                     </MenuItemIcon>
                     {expanded && <MenuItemText primary="Calendario" />}
                 </MenuItem>
+                <MenuItem button="true" expanded={expanded} component={RouterLink} to="/users" disableripple="true">
+                    <MenuItemIcon expanded={expanded}>
+                        <FaUser />
+                    </MenuItemIcon>
+                    {expanded && <MenuItemText primary="Usuários" />}
+                </MenuItem>
+                <MenuItem button="true" expanded={expanded} component={RouterLink} to="/profiles" disableripple="true">
+                    <MenuItemIcon expanded={expanded}>
+                        <AiFillProfile />
+                    </MenuItemIcon>
+                    {expanded && <MenuItemText primary="Perfís" />}
+                </MenuItem>
             </MenuOptions>
           </StyledToolbar>
         </StyledAppBar>
@@ -249,6 +265,8 @@ function Home(){
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/calendar" element={<CalendarPage />} />
+            <Route path='/users' element={<UsersPage></UsersPage>} />
+            <Route path='/profiles' element={<ProfilesPage></ProfilesPage>} />
           </Routes>
         </Content>
       </AppContainer>
