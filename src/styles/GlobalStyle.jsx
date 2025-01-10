@@ -1,5 +1,4 @@
 import styled, { createGlobalStyle } from "styled-components";
-import * as colors from "../config/colors";
 import 'react-toastify/dist/ReactToastify.css'
 
 export default createGlobalStyle`
@@ -8,7 +7,6 @@ export default createGlobalStyle`
         padding: 0;
         outline: none;
         box-sizing: border-box;
-
         
         &::-webkit-scrollbar {
             width: 5px; /* Largura da barra de rolagem */
@@ -67,63 +65,6 @@ export default createGlobalStyle`
 
     a {
         text-decoration: none;
-        color: ${colors.azulescuro};
     }
 
-    ul {
-        list-style: none;
-    }
-
-    p {
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
-    }
-
-    h3{
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif
-    }
-
-    label{
-        font-size: 16px;
-    }
-
-    body .Toastify .Toastify__toast-container .Toastify__toast--success{
-        background-color: ${colors.azulescuro};
-        color: white;
-    }
-
-    body .Toastify .Toastify__toast-container .Toastify__toast--error{
-        background-color: ${colors.errorColor};
-        color: white;
-    }
-
-    
-`;
-
-export const Container = styled.section`
-    width: 60%;
-    min-height: 400px;
-    background: #fff;
-    margin: 30px auto;
-    padding: 30px;
-    border-radius: 4px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    flex-direction: column;
-`;
-
-export const MainContainer = styled.main`
-    width: 95%;
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    margin: auto;
-    margin-left: 70px;
-    margin-top: 10px;
-    border-radius: 10px;
 `;

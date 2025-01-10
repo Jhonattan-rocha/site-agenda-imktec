@@ -69,20 +69,19 @@ function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleLogin = async () => { // Adicionado async
+  const handleLogin = async () => {
     if (username.trim() === '' || password.trim() === '') {
       toast.error('Email ou senha não podem ser vazios');
       return;
     }
-    setIsLoading(true); // Inicia o loading
+    setIsLoading(true);
     try {
-      await dispatch(actions.Login({ username, password })); // Aguarda a conclusão do login
-      navigate('/home'); // Navega para a home
+      dispatch(actions.Login({ username, password })); // Aguarda a conclusão do login
     } catch (error) {
       console.error('Erro ao fazer login:', error);
       toast.error('Falha no login. Verifique suas credenciais.');
     } finally {
-      setIsLoading(false); // Finaliza o loading
+      setIsLoading(false); 
     }
   };
 
@@ -92,6 +91,12 @@ function Login() {
       handleLogin();
     }
   };
+
+  useEffect(() => {
+    if(user.token){
+      navigate('/calendar');
+    }
+  }, [user, navigate]);
 
   return (
     <Container

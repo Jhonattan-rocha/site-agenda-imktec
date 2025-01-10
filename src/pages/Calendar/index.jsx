@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Grid2 as Grid,
   Box,
@@ -24,14 +24,13 @@ import {
   ViewWeek,
   ChevronLeft,
   ChevronRight,
-  MoreVert,
   Add,
   Delete,
   CheckCircleOutline,
   RadioButtonUnchecked,
   Update,
-  BackHand,
-  ArrowLeft
+  ArrowLeft,
+  UpdateRounded
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import {
@@ -48,6 +47,9 @@ import {
   parseISO,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import * as event_actions from '../../store/modules/eventsReducer/actions';
+import * as task_actions from '../../store/modules/tasksReducer/actions';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
@@ -162,16 +164,43 @@ const StyledFab = styled(Fab)(({ theme }) => ({
     right: theme.spacing(2),
 }));
 
-const CalendarPage = () => {
+const TextFieldStyled = styled(TextField)(({ theme }) => ({
+  '& .MuiInput-root': {
+    color: theme.palette.text.third, // Cor do texto digitado
+    borderColor: theme.palette.primary.contrastText,
+    '&:before': {
+      borderColor: theme.palette.primary.contrastText, // Cor da linha antes de focar
+    },
+    '&:hover:not(.Mui-disabled):before': {
+      borderColor: theme.palette.primary.main, // Cor da linha no hover
+    },
+    '&:after': {
+      borderColor: theme.palette.primary.main, // Cor da linha ao focar
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: theme.palette.text.third,
+    '&.Mui-focused': {
+      color: theme.palette.primary.main,
+    },
+  },
+  '& .MuiSvgIcon-root': {
+    color: theme.palette.text.third,
+  },
+}));
+
+function CalendarPage(){
+  const user = useSelector(state => state.authreducer);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [events, setEvents] = useState([]);
+  const events = useSelector(state => state.eventsReducer.events);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  
+  const [update, setUpdate] = useState(false);
+  const dispatch = useDispatch();
   const [eventFormData, setEventFormData] = useState({
     name: '',
     date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -185,6 +214,13 @@ const CalendarPage = () => {
     ready: false,
   });
 
+  useEffect(() => {
+    if(update){
+      dispatch(event_actions.EVENTS_REQUEST({skip: 0, limit: 0, filters: ""}));
+      setUpdate(false);
+    }
+  }, [update]);
+
   const handleTaskFormChange = (field, value) => {
     setTaskFormData({
       ...taskFormData,
@@ -195,20 +231,9 @@ const CalendarPage = () => {
   const handleCreateTask = () => {
     const newTask = {
       ...taskFormData,
-      id: Math.max(...selectedEvent.tasks.map((t) => t.id), 0) + 1,
       event_id: selectedEvent.id,
     };
-    setEvents((prevEvents) => {
-      return prevEvents.map((event) => {
-        if (event.id === selectedEvent.id) {
-          return {
-            ...event,
-            tasks: [...event.tasks, newTask],
-          };
-        }
-        return event;
-      });
-    });
+    dispatch(task_actions.TASKS_CREATE_REQUEST(newTask));
     setTaskFormData({
       name: '',
       desc: '',
@@ -219,17 +244,11 @@ const CalendarPage = () => {
   };
 
   const handleEditTask = () => {
-    setEvents((prevEvents) => {
-      return prevEvents.map((event) => {
-        if (event.id === selectedEvent.id) {
-          const updatedTasks = event.tasks.map((task) =>
-            task.id === taskFormData.id ? { ...task, ...taskFormData } : task
-          );
-          return { ...event, tasks: updatedTasks };
-        }
-        return event;
-      });
-    });
+    const updated_task = {
+      ...taskFormData,
+      event_id: selectedEvent.id,
+    };
+    dispatch(task_actions.TASKS_UPDATE_REQUEST(updated_task));
     setTaskFormData({
       name: '',
       desc: '',
@@ -237,20 +256,11 @@ const CalendarPage = () => {
       ready: false,
     });
     setIsTaskModalOpen(false);
+    setUpdate(true);
   };
 
   const handleDeleteTask = (taskId) => {
-    setEvents((prevEvents) => {
-      return prevEvents.map((event) => {
-        if (event.id === selectedEvent.id) {
-          return {
-            ...event,
-            tasks: event.tasks.filter((task) => task.id !== taskId),
-          };
-        }
-        return event;
-      });
-    });
+    dispatch(task_actions.TASKS_DELETE_REQUEST({id: taskId}));
     if (taskFormData.id === taskId) {
       setTaskFormData({
         name: '',
@@ -260,6 +270,7 @@ const CalendarPage = () => {
       });
       setIsTaskModalOpen(false);
     }
+    setUpdate(true);
   };
 
   const handleEventFormChange = (field, value) => {
@@ -268,41 +279,39 @@ const CalendarPage = () => {
       [field]: value,
     });
   };
-
   const handleCreateEvent = () => {
-    const newEvent = {
-      ...eventFormData,
-      id: Math.max(...events.map((e) => e.id), 0) + 1,
-      user_id: 1, // Defina o user_id conforme necessário
-      tasks: [],
-      date: new Date(eventFormData.date).toISOString(),
-    };
-    setEvents([...events, newEvent]);
+    
+    dispatch(event_actions.EVENTS_CREATE_REQUEST({
+      user_id: user.user.id,
+      date: new Date(eventFormData.date),
+      name: eventFormData.name,
+      desc: eventFormData.desc
+    }));
+
     setEventFormData({
       name: '',
       date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       desc: '',
     });
     setIsEventModalOpen(false);
+    setUpdate(true);
   };
 
   const handleEditEvent = () => {
-    const updatedEvents = events.map((event) =>
-      event.id === eventFormData.id
-        ? { ...event, ...eventFormData, date: new Date(eventFormData.date).toISOString() }
-        : event
-    );
-    setEvents(updatedEvents);
-    setEventFormData({
-      name: '',
-      date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-      desc: '',
-    });
-    setIsEventModalOpen(false);
+      dispatch(event_actions.EVENTS_CREATE_REQUEST({
+      
+      }));
+      setEventFormData({
+        name: '',
+        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        desc: '',
+      });
+      setIsEventModalOpen(false);
+      setUpdate(true);
   };
 
   const handleDeleteEvent = (eventId) => {
-    setEvents(events.filter((event) => event.id !== eventId));
+    dispatch(event_actions.EVENTS_DELETE_REQUEST({id: eventId}))
     if (eventFormData.id === eventId) {
       setEventFormData({
         name: '',
@@ -311,12 +320,14 @@ const CalendarPage = () => {
       });
       setIsEventModalOpen(false);
     }
+    setUpdate(true);
   };
 
   const handleDrawerOpen = (day) => {
     setSelectedDay(day);
     setDrawerOpen(true);
     setSelectedEvent(null);
+    setUpdate(true);
   };
 
   const handleDrawerClose = () => {
@@ -340,9 +351,10 @@ const CalendarPage = () => {
     }
   };
 
-  const handleEventClick = (event) => {
+  const handleEventClick = (event, day) => {
     setSelectedEvent(event);
     setDrawerOpen(true);
+    setSelectedDay(day);
   };
 
   const daysInMonth = useMemo(() => {
@@ -370,7 +382,7 @@ const CalendarPage = () => {
       setSelectedEvent(updatedSelectedEvent);
     }
   }, [events, selectedEvent]);
-
+  console.log(selectedEvent);
   return (
     <Grid container>
       <Grid
@@ -434,7 +446,7 @@ const CalendarPage = () => {
                 onClick={() => handleDrawerOpen(day)}
               >
                 <CalendarDayLabel>{format(day, 'd')}</CalendarDayLabel>
-                <Box sx={{ flexGrow: 1, overflow: 'hidden' }}>
+                <Box sx={{overflow: 'hidden', width: '100%' }}>
                   {events
                     .filter((event) => isSameDay(parseISO(event.date), day))
                     .map((event) => (
@@ -442,7 +454,7 @@ const CalendarPage = () => {
                         key={event.id}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEventClick(event);
+                          handleEventClick(event, day);
                         }}
                         sx={{
                           backgroundColor: 'primary.main',
@@ -456,7 +468,7 @@ const CalendarPage = () => {
                           whiteSpace: 'nowrap',
                           '&:hover': {
                             opacity: 0.8
-                          }
+                          },
                         }}
                       >
                         {event.name}
@@ -468,7 +480,7 @@ const CalendarPage = () => {
           </CalendarGrid>
         </CalendarContainer>
       </Grid>
-      <Grid item xs={12} md={3}>
+      <Grid item="true" xs={12} md={3}>
         <StyledDrawer variant="persistent" anchor="right" open={drawerOpen}>
             <DrawerHeader>
                 <Typography variant='h6' sx={{marginRight: 'auto'}}>
@@ -483,20 +495,28 @@ const CalendarPage = () => {
                 <Box p={2}>
                     <Typography variant="h6">Tarefas - {selectedEvent.name}</Typography>
                     <List dense>
-                        {selectedEvent.tasks.map((task) => (
+                        {selectedEvent.tasks.map((  task) => (
                             <ListItem key={task.id}
                                 secondaryAction={
+                                  <>
+                                    <IconButton style={{ width: 40 }} edge="end" aria-label="update" onClick={(e) => {
+                                        setTaskFormData(task);
+                                        setIsTaskModalOpen(true);
+                                      }}>
+                                        <UpdateRounded />
+                                    </IconButton>
                                     <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteTask(task.id);
                                       }}>
                                         <Delete />
                                     </IconButton>
+                                  </>
                                 }
                             >
                                 <IconButton style={{ width: 40 }} onClick={() => {
-                                    setTaskFormData(task);
-                                    setIsTaskModalOpen(true);
+                                    dispatch(task_actions.TASKS_UPDATE_REQUEST({...task, ready: !task.ready}));
+                                    setUpdate(true);
                                 }}>
                                     {task.ready ? <CheckCircleOutline /> : <RadioButtonUnchecked />}
                                 </IconButton>
@@ -526,7 +546,7 @@ const CalendarPage = () => {
                           color="primary"
                           startIcon={<ArrowLeft />}
                           onClick={() => {
-                            setSelectedEvent({})
+                            handleDrawerOpen(selectedDay);
                           }}
                           style={{marginLeft: 3}}
                       >
@@ -537,7 +557,7 @@ const CalendarPage = () => {
                     <Dialog open={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)}>
                         <DialogTitle>{taskFormData.id ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
                         <DialogContent>
-                            <TextField
+                            <TextFieldStyled
                                 autoFocus
                                 margin="dense"
                                 label="Nome da Tarefa"
@@ -547,7 +567,7 @@ const CalendarPage = () => {
                                 value={taskFormData.name}
                                 onChange={(e) => handleTaskFormChange('name', e.target.value)}
                             />
-                            <TextField
+                            <TextFieldStyled
                                 margin="dense"
                                 label="Descrição"
                                 type="text"
@@ -556,7 +576,7 @@ const CalendarPage = () => {
                                 value={taskFormData.desc}
                                 onChange={(e) => handleTaskFormChange('desc', e.target.value)}
                             />
-                            <TextField
+                            <TextFieldStyled
                                 margin="dense"
                                 label="Data"
                                 type="datetime-local"
@@ -591,7 +611,7 @@ const CalendarPage = () => {
                                 }}
                                 secondaryAction={
                                     <>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
+                                      <IconButton style={{ width: 40 }} edge="end" aria-label="update" onClick={(e) => {
                                           e.stopPropagation();
                                           setEventFormData(event);
                                           setIsEventModalOpen(true);
@@ -623,7 +643,7 @@ const CalendarPage = () => {
                     <Dialog open={isEventModalOpen} onClose={() => setIsEventModalOpen(false)}>
                         <DialogTitle>{eventFormData.id ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
                         <DialogContent>
-                            <TextField
+                            <TextFieldStyled
                                 autoFocus
                                 margin="dense"
                                 label="Nome do Evento"
@@ -633,7 +653,7 @@ const CalendarPage = () => {
                                 value={eventFormData.name}
                                 onChange={(e) => handleEventFormChange('name', e.target.value)}
                             />
-                            <TextField
+                            <TextFieldStyled
                                 margin="dense"
                                 label="Descrição"
                                 type="text"
@@ -642,7 +662,7 @@ const CalendarPage = () => {
                                 value={eventFormData.desc}
                                 onChange={(e) => handleEventFormChange('desc', e.target.value)}
                             />
-                            <TextField
+                            <TextFieldStyled
                                 margin="dense"
                                 label="Data"
                                 type="datetime-local"

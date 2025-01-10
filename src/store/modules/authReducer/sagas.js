@@ -6,7 +6,12 @@ import { alias } from '../../../config/appConfig';
 
 function* Login({ payload }) {
     try {
-        const response = yield call(axios.post, `${alias}/token/`, payload);
+        const response = yield call(axios.post, `${alias}/token/`, payload, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+            }
+        );
 
         yield put(
             actions.LoginSuccess({

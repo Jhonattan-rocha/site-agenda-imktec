@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -28,9 +28,10 @@ import {
   CalendarMonth,
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
-import { BrowserRouter as Router, Routes, Route, Link as RouterLink } from 'react-router-dom'; // Importe as dependências necessárias
+import { BrowserRouter as Router, Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
 import Login from '../Login';
 import CalendarPage from '../Calendar';
+import { useSelector } from 'react-redux';
 
 // Estilos personalizados (mantidos do exemplo anterior)
 const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
@@ -116,9 +117,11 @@ const Content = styled(Box)(({ theme, expanded }) => ({
 }));
 
 function Home(){
+  const user = useSelector(state => state.authreducer);
   const [expanded, setExpanded] = useState(true);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+  const navigate = useNavigate();
 
   const handleToggleSidebar = () => {
     setExpanded(!expanded);
@@ -140,6 +143,12 @@ function Home(){
     setAnchorElNotifications(null);
   };
 
+  useEffect(() => {
+    if(!user.isLoading){
+      navigate("/login");
+    }
+  }, []);
+
   return (
       <AppContainer container="true">
         <StyledAppBar position="fixed" expanded={expanded}>
@@ -156,12 +165,11 @@ function Home(){
             <StyledAvatar alt="User Name" src="/path/to/user/image.jpg" />
             {expanded && (
               <Typography variant="h6" noWrap color="text.primary">
-                User Name
+                {user.user.name}
               </Typography>
             )}
 
             <Grid container justifyContent="center" spacing={1} sx={{ mt: 2, mb: 2 }}>
-              {/* ... (Tooltip e Popover do usuário - mantidos do exemplo anterior) */}
               <Grid item="true">
                 <Tooltip title="Open user menu" arrow>
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0, width: 40 }}>
@@ -197,7 +205,6 @@ function Home(){
                   </List>
                 </Popover>
               </Grid>
-              {/* ... (Tooltip e Popover de notificações - mantidos do exemplo anterior) */}
               <Grid item="true">
                 <Tooltip title="Notifications" arrow>
                   <IconButton onClick={handleOpenNotifications} sx={{ p: 0, width: 40 }}>
@@ -242,7 +249,6 @@ function Home(){
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/calendar" element={<CalendarPage />} />
-            {/* Adicione mais rotas aqui */}
           </Routes>
         </Content>
       </AppContainer>
