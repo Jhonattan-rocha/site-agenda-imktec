@@ -37,7 +37,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.GENERICS_FALURE: {
-            toast.error(`Erro ao buscar: ${action.payload.error.response.data.detail}`)
+            toast.error(`Erro ao buscar`)
             return state
         }
 
@@ -47,7 +47,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.GENERIC_CREATE_FALURE: {
-            toast.error(`Erro ao criar: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao criar`);
             return state;
         }
 
@@ -57,7 +57,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.GENERIC_UPDATE_FALURE: {
-            toast.error(`Erro ao editar: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao editar`);
             return state;
         }
 
@@ -67,7 +67,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.GENERIC_DELETE_FALURE: {
-            toast.error(`Erro ao deletar: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao deletar`);
             return state;
         }
 

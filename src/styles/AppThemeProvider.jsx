@@ -20,7 +20,8 @@ export const useTheme = () => {
           },
           text: {
             primary: '#ffffff', // Branco para textos principais
-            secondary: '#655e5e', // Cinza Claro para textos secundários
+            secondary: '#b5adad', // Cinza Claro para textos secundários
+            third: '#000000'
           },
           custom: {
             chatIcon: '#36454F', // Cinza Escuro para o ícone de chat

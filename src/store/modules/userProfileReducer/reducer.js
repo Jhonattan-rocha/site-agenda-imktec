@@ -19,7 +19,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_PROFILES_FALURE: {
-            toast.error(`Erro ao buscar os perfis: ${action.payload.error.response.data.detail}`)
+            toast.error(`Erro ao buscar os perfis`)
             return state
         }
 
@@ -29,7 +29,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_PROFILES_CREATE_FALURE: {
-            toast.error(`Erro ao criar o perfil: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao criar o perfil`);
             return state;
         }
 
@@ -39,7 +39,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_PROFILES_UPDATE_FALURE: {
-            toast.error(`Erro ao editar o perfil: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao editar o perfil`);
             return state;
         }
 
@@ -49,7 +49,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_PROFILES_DELETE_FALURE: {
-            toast.error(`Erro ao deletar o perfil: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao deletar o perfil`);
             return state;
         }
 

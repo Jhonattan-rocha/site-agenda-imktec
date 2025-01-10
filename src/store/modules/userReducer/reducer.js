@@ -18,7 +18,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USERS_FALURE: {
-            toast.error(`Erro ao buscar o usuário: ${action.payload.error.response.data.detail}`)
+            toast.error(`Erro ao buscar o usuário`)
             return state
         }
 
@@ -28,7 +28,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_CREATE_FALURE: {
-            toast.error(`Erro ao criar o usuário: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao criar o usuário`);
             return state;
         }
 
@@ -38,7 +38,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_UPDATE_FALURE: {
-            toast.error(`Erro ao editar o usuário: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao editar o usuário`);
             return state;
         }
 
@@ -48,7 +48,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.USER_DELETE_FALURE: {
-            toast.error(`Erro ao deletar o usuário: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao deletar o usuário`);
             return state;
         }
 

@@ -19,7 +19,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.PERMISSIONS_FALURE: {
-            toast.error(`Erro ao buscar as permissões: ${action.payload.error.response.data.detail}`)
+            toast.error(`Erro ao buscar as permissões`)
             return state
         }
 
@@ -29,7 +29,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.PERMISSION_CREATE_FALURE: {
-            toast.error(`Erro ao criar a permissão: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao criar a permissão`);
             return state;
         }
 
@@ -39,7 +39,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.PERMISSION_UPDATE_FALURE: {
-            toast.error(`Erro ao editar a permissão: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao editar a permissão`);
             return state;
         }
 
@@ -49,7 +49,7 @@ export default function recuder(state = initialState, action){
         }
 
         case type.PERMISSION_DELETE_FALURE: {
-            toast.error(`Erro ao deletar a permissão: ${action.payload.error.response.data.detail}`);
+            toast.error(`Erro ao deletar a permissão`);
             return state;
         }
 
