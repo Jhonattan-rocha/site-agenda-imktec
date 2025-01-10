@@ -561,6 +561,7 @@ function CalendarPage(){
                                 variant="standard"
                                 value={taskFormData.name}
                                 onChange={(e) => handleTaskFormChange('name', e.target.value)}
+                                required
                             />
                             <TextFieldStyled
                                 margin="dense"
@@ -570,6 +571,7 @@ function CalendarPage(){
                                 variant="standard"
                                 value={taskFormData.desc}
                                 onChange={(e) => handleTaskFormChange('desc', e.target.value)}
+                                required
                             />
                             <TextFieldStyled
                                 margin="dense"
@@ -581,9 +583,10 @@ function CalendarPage(){
                                 onChange={(e) => handleTaskFormChange('date', e.target.value)}
                                 slotProps={{
                                   inputLabel: {
-                                    shrink: true,
+                                    shrink: "true",
                                   }
                                 }}
+                                required
                             />
                         </DialogContent>
                         <DialogActions>
@@ -647,6 +650,7 @@ function CalendarPage(){
                                 variant="standard"
                                 value={eventFormData.name}
                                 onChange={(e) => handleEventFormChange('name', e.target.value)}
+                                required
                             />
                             <TextFieldStyled
                                 margin="dense"
@@ -656,6 +660,7 @@ function CalendarPage(){
                                 variant="standard"
                                 value={eventFormData.desc}
                                 onChange={(e) => handleEventFormChange('desc', e.target.value)}
+                                required
                             />
                             <TextFieldStyled
                                 margin="dense"
@@ -667,9 +672,10 @@ function CalendarPage(){
                                 onChange={(e) => handleEventFormChange('date', e.target.value)}
                                 slotProps={{
                                     input: {
-                                      shrink: true,
-                                  }
+                                      shrink: "true",
+                                    }
                                 }}
+                                required
                             />
                         </DialogContent>
                         <DialogActions>
