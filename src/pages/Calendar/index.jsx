@@ -17,7 +17,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Fab
+  Fab,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import {
   CalendarToday,
@@ -50,6 +52,7 @@ import { ptBR } from 'date-fns/locale';
 import * as event_actions from '../../store/modules/eventsReducer/actions';
 import * as task_actions from '../../store/modules/tasksReducer/actions';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTheme } from '../../styles/AppThemeProvider';
 
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
@@ -201,10 +204,12 @@ function CalendarPage(){
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [update, setUpdate] = useState(true);
   const dispatch = useDispatch();
+  const theme = useTheme();
   const [eventFormData, setEventFormData] = useState({
     name: '',
     date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     desc: '',
+    private: false
   });
 
   const [taskFormData, setTaskFormData] = useState({
@@ -216,7 +221,7 @@ function CalendarPage(){
 
   useEffect(() => {
     if(update){
-      dispatch(event_actions.EVENTS_REQUEST({skip: 0, limit: 0, filters: ""}));
+      dispatch(event_actions.EVENTS_REQUEST({skip: 0, limit: 0, filters: `user_id+eq+${user.user.id}|private+eq+0`}));
       setUpdate(false);
     }
   }, [update]);
@@ -255,6 +260,7 @@ function CalendarPage(){
       desc: '',
       date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       ready: false,
+      private: false
     });
     setIsTaskModalOpen(false);
     setUpdate(true);
@@ -293,14 +299,15 @@ function CalendarPage(){
       name: '',
       date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
       desc: '',
+      private: false
     });
     setIsEventModalOpen(false);
     setUpdate(true);
   };
 
   const handleEditEvent = () => {
-      dispatch(event_actions.EVENTS_CREATE_REQUEST({
-      
+      dispatch(event_actions.EVENTS_UPDATE_REQUEST({
+        ...eventFormData
       }));
       setEventFormData({
         name: '',
@@ -318,6 +325,7 @@ function CalendarPage(){
         name: '',
         date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
         desc: '',
+        private: false
       });
       setIsEventModalOpen(false);
     }
@@ -503,6 +511,7 @@ function CalendarPage(){
                                     <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
                                         e.stopPropagation();
                                         handleDeleteTask(task.id);
+                                        setUpdate(true);
                                       }}>
                                         <Delete />
                                     </IconButton>
@@ -550,7 +559,7 @@ function CalendarPage(){
                     </Box>
 
                     <Dialog open={isTaskModalOpen} onClose={() => setIsTaskModalOpen(false)}>
-                        <DialogTitle>{taskFormData.id ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
+                        <DialogTitle sx={{ color: theme.palette.text.third }}>{taskFormData.id ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
                         <DialogContent>
                             <TextFieldStyled
                                 autoFocus
@@ -591,7 +600,10 @@ function CalendarPage(){
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => setIsTaskModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={taskFormData.id ? handleEditTask : handleCreateTask}>
+                            <Button onClick={(e) => {
+                              taskFormData.id ? handleEditTask(e) : handleCreateTask(e)
+                              setUpdate(true);
+                            }}>
                                 {taskFormData.id ? 'Salvar' : 'Adicionar'}
                             </Button>
                         </DialogActions>
@@ -619,6 +631,7 @@ function CalendarPage(){
                                       <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
                                           e.stopPropagation();
                                           handleDeleteEvent(event.id);
+                                          setUpdate(true);
                                         }}>
                                           <Delete />
                                       </IconButton>
@@ -639,7 +652,7 @@ function CalendarPage(){
                     </EventList>
 
                     <Dialog open={isEventModalOpen} onClose={() => setIsEventModalOpen(false)}>
-                        <DialogTitle>{eventFormData.id ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
+                        <DialogTitle sx={{ color: theme.palette.text.third }}>{eventFormData.id ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
                         <DialogContent>
                             <TextFieldStyled
                                 autoFocus
@@ -677,10 +690,26 @@ function CalendarPage(){
                                 }}
                                 required
                             />
+                            <FormControlLabel
+                              name='private'
+                              control={
+                                  <Checkbox
+                                      checked={eventFormData.private}
+                                      onChange={(e) =>
+                                          handleEventFormChange('private', e.target.checked)
+                                      }
+                                  />
+                              }
+                              label="Particular?"
+                              style={{ color: theme.palette.text.third}}
+                            />
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => setIsEventModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={eventFormData.id ? handleEditEvent : handleCreateEvent}>
+                            <Button onClick={(e) => {
+                              eventFormData.id ? handleEditEvent(e) : handleCreateEvent(e)
+                              setUpdate(true);
+                            }}>
                                 {eventFormData.id ? 'Salvar' : 'Adicionar'}
                             </Button>
                         </DialogActions>
@@ -696,6 +725,7 @@ function CalendarPage(){
                             ? format(selectedDay, "yyyy-MM-dd'T'HH:mm")
                             : format(new Date(), "yyyy-MM-dd'T'HH:mm"),
                           desc: '',
+                          private: false,
                         });
                         setIsEventModalOpen(true);
                       }}

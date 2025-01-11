@@ -185,12 +185,18 @@ function UsersPage(){
                 <StyledTableCell>{user.email}</StyledTableCell>
                 <StyledTableCell>{user.profile ? user.profile.name : ''}</StyledTableCell>
                 <StyledTableCell align="right">
-                  <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(user)}>
+                  <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => {
+                    handleEdit(user);
+                    setUpdate(true);
+                  }}>
                     <Edit />
                   </IconButton>
                   <IconButton
                     aria-label="delete"
-                    onClick={() => handleDelete(user.id)}
+                    onClick={() => {
+                      handleDelete(user.id);
+                      setUpdate(true);
+                    }}
                     style={{ width: 40 }}
                   >
                     <Delete />
@@ -260,7 +266,10 @@ function UsersPage(){
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSubmit}>
+          <Button onClick={(e) => {
+            handleSubmit(e);
+            setUpdate(true);
+          }}>
             {selectedUser ? 'Salvar' : 'Adicionar'}
           </Button>
         </DialogActions>
