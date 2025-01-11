@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Grid2 as Grid,
   Box,
@@ -19,7 +19,9 @@ import {
   DialogActions,
   Fab,
   Checkbox,
-  FormControlLabel
+  FormControlLabel,
+  Avatar,
+  CircularProgress
 } from '@mui/material';
 import {
   CalendarToday,
@@ -51,6 +53,7 @@ import {
 import { ptBR } from 'date-fns/locale';
 import * as event_actions from '../../store/modules/eventsReducer/actions';
 import * as task_actions from '../../store/modules/tasksReducer/actions';
+import * as user_actions from '../../store/modules/userReducer/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
 
@@ -192,8 +195,16 @@ const TextFieldStyled = styled(TextField)(({ theme }) => ({
   },
 }));
 
+const StyledAvatar = styled(Avatar)(({ theme }) => ({
+  width: theme.spacing(7),
+  height: theme.spacing(7),
+  marginBottom: theme.spacing(2),
+  border: `2px solid ${theme.palette.primary.main}`,
+}));
+
 function CalendarPage(){
   const user = useSelector(state => state.authreducer);
+  const users = useSelector(state => state.userreducer.users);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -222,6 +233,7 @@ function CalendarPage(){
   useEffect(() => {
     if(update){
       dispatch(event_actions.EVENTS_REQUEST({skip: 0, limit: 0, filters: `user_id+eq+${user.user.id}|private+eq+0`}));
+      dispatch(user_actions.USERS_REQUEST({skip: 0, limit: 0, filters: ""}));
       setUpdate(false);
     }
   }, [update]);
@@ -505,6 +517,7 @@ function CalendarPage(){
                                     <IconButton style={{ width: 40 }} edge="end" aria-label="update" onClick={(e) => {
                                         setTaskFormData(task);
                                         setIsTaskModalOpen(true);
+                                        setUpdate(true);
                                       }}>
                                         <UpdateRounded />
                                     </IconButton>
@@ -625,6 +638,7 @@ function CalendarPage(){
                                           e.stopPropagation();
                                           setEventFormData(event);
                                           setIsEventModalOpen(true);
+                                          setUpdate(true);
                                         }}>
                                           <Update />
                                       </IconButton>
@@ -654,6 +668,11 @@ function CalendarPage(){
                     <Dialog open={isEventModalOpen} onClose={() => setIsEventModalOpen(false)}>
                         <DialogTitle sx={{ color: theme.palette.text.third }}>{eventFormData.id ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
                         <DialogContent>
+                            {users.length ? (
+                              <StyledAvatar alt="User Name" title={users.find(usr => usr.id === eventFormData.user_id)?.name} />
+                            ): (
+                              <CircularProgress />
+                            )}
                             <TextFieldStyled
                                 autoFocus
                                 margin="dense"
@@ -694,7 +713,7 @@ function CalendarPage(){
                               name='private'
                               control={
                                   <Checkbox
-                                      checked={eventFormData.private}
+                                      checked={eventFormData.private ?? false}
                                       onChange={(e) =>
                                           handleEventFormChange('private', e.target.checked)
                                       }

@@ -28,11 +28,13 @@ import { styled } from '@mui/system';
 import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
 import Login from '../Login';
 import CalendarPage from '../Calendar';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import UsersPage from '../Users';
 import { FaUser } from 'react-icons/fa';
 import ProfilesPage from '../Profiles';
 import { AiFillProfile } from 'react-icons/ai';
+import * as actions_auth from '../../store/modules/authReducer/actions';
+import hasPermission from '../../services/has_permission';
 
 // Estilos personalizados (mantidos do exemplo anterior)
 const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
@@ -123,6 +125,7 @@ function Home(){
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleToggleSidebar = () => {
     setExpanded(!expanded);
@@ -148,7 +151,7 @@ function Home(){
     if(!user.isLoggedIn){
       navigate("/login");
     }
-  }, []);
+  }, [user, navigate]);
   
   return (
       <AppContainer container="true">
@@ -166,7 +169,7 @@ function Home(){
             >
               {expanded ? <ArrowLeft /> : <ArrowRight />}
             </IconButton>
-            <StyledAvatar alt="User Name" src="/path/to/user/image.jpg" />
+            <StyledAvatar alt="User Name" />
             {expanded && (
               <Typography variant="h6" noWrap color="text.primary">
                 {user.user.name}
@@ -200,7 +203,10 @@ function Home(){
                       </ListItemIcon>
                       <ListItemText style={{color: 'black'}} primary="Settings" />
                     </ListItem>
-                    <ListItem button="true" onClick={handleCloseUserMenu} disableripple="true">
+                    <ListItem button="true" onClick={() => {
+                        handleCloseUserMenu();
+                        dispatch(actions_auth.Loguot());
+                      }} disableripple="true">
                       <ListItemIcon>
                         <ExitToApp color="primary" />
                       </ListItemIcon>
@@ -266,8 +272,8 @@ function Home(){
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/calendar" element={<CalendarPage />} />
-            <Route path='/users' element={<UsersPage></UsersPage>} />
-            <Route path='/profiles' element={<ProfilesPage></ProfilesPage>} />
+            { hasPermission(user.user.profile, "Usuários", "can_view") ? <Route path='/users' element={<UsersPage></UsersPage>} />: null }
+            { hasPermission(user.user.profile, "perfís", "can_view") ? <Route path='/profiles' element={<ProfilesPage></ProfilesPage>} />: null }
           </Routes>
         </Content>
       </AppContainer>

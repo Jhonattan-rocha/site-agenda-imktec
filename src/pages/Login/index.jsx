@@ -93,7 +93,7 @@ function Login() {
   };
 
   useEffect(() => {
-    if(user.token){
+    if(user.isLoggedIn){
       navigate('/calendar');
     }
   }, [user, navigate]);

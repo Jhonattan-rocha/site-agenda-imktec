@@ -31,6 +31,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import * as user_actions from '../../store/modules/userReducer/actions';
 import * as profile_actions from '../../store/modules/userProfileReducer/actions';
 import { useTheme } from '../../styles/AppThemeProvider';
+import hasPermission from '../../services/has_permission';
 
 // Estilos
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -87,6 +88,7 @@ function UsersPage(){
   const [update, setUpdate] = useState(true);
   const theme = useTheme();
   const dispatch = useDispatch();
+  const user = useSelector(state => state.authreducer);
 
   useEffect(() => {
     if(update){
@@ -157,13 +159,15 @@ function UsersPage(){
       <Typography style={{ color: theme.palette.text.primary}} variant="h4" gutterBottom>
         Usuários
       </Typography>
-      <StyledFab
-        color="primary"
-        aria-label="add"
-        onClick={handleClickOpen}
-      >
-        <Add />
-      </StyledFab>
+      {hasPermission(user.user.profile, "Usuários", "can_create") ? (
+        <StyledFab
+          color="primary"
+          aria-label="add"
+          onClick={handleClickOpen}
+        >
+          <Add />
+        </StyledFab>
+      ): null}
       <StyledTableContainer component={Paper}>
         <Table aria-label="simple table">
           <TableHead>
@@ -185,22 +189,26 @@ function UsersPage(){
                 <StyledTableCell>{user.email}</StyledTableCell>
                 <StyledTableCell>{user.profile ? user.profile.name : ''}</StyledTableCell>
                 <StyledTableCell align="right">
-                  <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => {
-                    handleEdit(user);
-                    setUpdate(true);
-                  }}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton
-                    aria-label="delete"
-                    onClick={() => {
-                      handleDelete(user.id);
+                  {hasPermission(user.user.profile, "Usuários", "can_update") ? (
+                    <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => {
+                      handleEdit(user);
                       setUpdate(true);
-                    }}
-                    style={{ width: 40 }}
-                  >
-                    <Delete />
-                  </IconButton>
+                    }}>
+                      <Edit />
+                    </IconButton>
+                  ): null}
+                  {hasPermission(user.user.profile, "Usuários", "can_delete") ? (
+                    <IconButton
+                      aria-label="delete"
+                      onClick={() => {
+                        handleDelete(user.id);
+                        setUpdate(true);
+                      }}
+                      style={{ width: 40 }}
+                    >
+                      <Delete />
+                    </IconButton>
+                  ): null}
                 </StyledTableCell>
               </TableRow>
             ))}

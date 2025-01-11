@@ -29,6 +29,7 @@ import { styled } from '@mui/system';
 import * as profile_actions from '../../store/modules/userProfileReducer/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
+import hasPermission from '../../services/has_permission';
 
 // Estilos
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -83,6 +84,7 @@ function ProfilesPage(){
     const [update, setUpdate] = useState(true);
     const dispatch = useDispatch();
     const theme = useTheme();
+    const user = useSelector(state => state.authreducer);
 
     useEffect(() => {
         if(update){
@@ -191,29 +193,35 @@ function ProfilesPage(){
                         </StyledTableCell>
                         <StyledTableCell>{profile.name}</StyledTableCell>
                         <StyledTableCell align="right">
-                        <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(profile)}>
-                            <Edit />
-                        </IconButton>
-                        <IconButton
-                            aria-label="delete"
-                            onClick={() => handleDelete(profile)}
-                            style={{ width: 40 }}
-                        >
-                            <Delete />
-                        </IconButton>
+                        {hasPermission(user.user.profile, "perfís", "can_update") ? (
+                            <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(profile)}>
+                                <Edit />
+                            </IconButton>
+                        ): null}
+                        {hasPermission(user.user.profile, "perfís", "can_delete") ? (
+                            <IconButton
+                                aria-label="delete"
+                                onClick={() => handleDelete(profile)}
+                                style={{ width: 40 }}
+                            >
+                                <Delete />
+                            </IconButton>
+                        ): null}
                         </StyledTableCell>
                     </TableRow>
                 ))}
             </TableBody>
             </Table>
         </StyledTableContainer>
-        <StyledFab
-            color="primary"
-            aria-label="add"
-            onClick={handleClickOpen}
-        >
-            <Add />
-        </StyledFab>
+        {hasPermission(user.user.profile, "perfís", "can_create") ? (
+            <StyledFab
+                color="primary"
+                aria-label="add"
+                onClick={handleClickOpen}
+            >
+                <Add />
+            </StyledFab>
+        ): null}
         <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
             <DialogTitle>
             {selectedProfile ? 'Editar Perfil' : 'Adicionar Perfil'}
