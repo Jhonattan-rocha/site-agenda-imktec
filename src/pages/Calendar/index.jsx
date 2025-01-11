@@ -21,7 +21,8 @@ import {
   Checkbox,
   FormControlLabel,
   Avatar,
-  CircularProgress
+  CircularProgress,
+  Autocomplete
 } from '@mui/material';
 import {
   CalendarToday,
@@ -56,6 +57,7 @@ import * as task_actions from '../../store/modules/tasksReducer/actions';
 import * as user_actions from '../../store/modules/userReducer/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
+import * as generic_actions from '../../store/modules/genericReducer/actions';
 
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
@@ -202,6 +204,25 @@ const StyledAvatar = styled(Avatar)(({ theme }) => ({
   border: `2px solid ${theme.palette.primary.main}`,
 }));
 
+const AvatarsContainer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: theme.spacing(1),
+  overflowX: 'auto',
+  paddingBottom: theme.spacing(1),
+  marginBottom: theme.spacing(2),
+  '&::-webkit-scrollbar': {
+    height: 8,
+  },
+  '&::-webkit-scrollbar-track': {
+    background: theme.palette.grey[300],
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: 4,
+  },
+}));
+
 function CalendarPage(){
   const user = useSelector(state => state.authreducer);
   const users = useSelector(state => state.userreducer.users);
@@ -216,6 +237,8 @@ function CalendarPage(){
   const [update, setUpdate] = useState(true);
   const dispatch = useDispatch();
   const theme = useTheme();
+  const [coworker, setCoworker] = useState(users?.length ? users[0]: {});
+
   const [eventFormData, setEventFormData] = useState({
     name: '',
     date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -398,6 +421,18 @@ function CalendarPage(){
     }
   }, [events, selectedEvent]);
   
+  const handleAddUserToTask = (userId) => {
+    dispatch(
+      generic_actions.GENERIC_CREATE_REQUEST({
+        task_id: taskFormData.id,
+        user_id: userId,
+        model: "TaskUser"
+      })
+    );
+    setUpdate(true);
+  };
+    
+  console.log(events);
   return (
     <Grid container>
       <Grid
@@ -610,6 +645,51 @@ function CalendarPage(){
                                 }}
                                 required
                             />
+
+                            {taskFormData.id ? (
+                              <>
+                                  <AvatarsContainer>
+                                  {taskFormData?.task_users?.map((user) => (
+                                    <StyledAvatar
+                                      key={user.id}
+                                      alt={user.name}
+                                      title={user.name}
+                                    >
+                                      <Typography variant="caption">{user.name}</Typography>
+                                    </StyledAvatar>
+                                  ))}
+                                  </AvatarsContainer>
+                                  <Autocomplete
+                                    options={users}
+                                    getOptionLabel={(option) => option?.name}
+                                    value={coworker}
+                                    onChange={(event, newValue) => {
+                                      setCoworker(newValue);
+                                      handleAddUserToTask(newValue.id);
+                                    }}
+                                    renderInput={(params) => (
+                                      <>
+                                        <TextFieldStyled
+                                          {...params}
+                                          label="Selecionar Usuário"
+                                          variant="standard"
+                                          margin="normal"
+                                          sx={{ minWidth: 250 }}
+                                        />
+                                      </>
+                                    )}
+                                    sx={{
+                                      '& .MuiIconButton-root': {
+                                        width: 40
+                                      },
+                                      '& .MuiAutocomplete-option': {
+                                        color: `${theme.palette.text.third} !important`,
+                                      },
+                                    }}
+                                    style={{ color: 'black' }}
+                                  />
+                              </>
+                            ): null }
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => setIsTaskModalOpen(false)}>Cancelar</Button>

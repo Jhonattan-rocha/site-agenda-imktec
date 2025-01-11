@@ -5,6 +5,13 @@ const initialState = {
     generics: {
         "User": [],
         "UserProfile": [],
+        "EventUser": [],
+        "TaskUser": [],
+        "Permissions": [],
+        "File": [],
+        "Logger": [],
+        "Events": [],
+        "Tasks": [],
     },
 }
 

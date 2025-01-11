@@ -170,7 +170,7 @@ function ProfilesPage(){
 
     // Lista de entidades para as quais você deseja gerenciar permissões
     const entities = ['Usuários', 'perfís'];
-
+    
     return (
         <Box p={2}>
         <Typography variant="h4" style={{ color: theme.palette.text.primary}} gutterBottom>

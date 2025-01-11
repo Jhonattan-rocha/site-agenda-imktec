@@ -88,7 +88,7 @@ function UsersPage(){
   const [update, setUpdate] = useState(true);
   const theme = useTheme();
   const dispatch = useDispatch();
-  const user = useSelector(state => state.authreducer);
+  const current_user = useSelector(state => state.authreducer);
 
   useEffect(() => {
     if(update){
@@ -159,7 +159,7 @@ function UsersPage(){
       <Typography style={{ color: theme.palette.text.primary}} variant="h4" gutterBottom>
         Usuários
       </Typography>
-      {hasPermission(user.user.profile, "Usuários", "can_create") ? (
+      {hasPermission(current_user.user.profile, "Usuários", "can_create") ? (
         <StyledFab
           color="primary"
           aria-label="add"
@@ -189,7 +189,7 @@ function UsersPage(){
                 <StyledTableCell>{user.email}</StyledTableCell>
                 <StyledTableCell>{user.profile ? user.profile.name : ''}</StyledTableCell>
                 <StyledTableCell align="right">
-                  {hasPermission(user.user.profile, "Usuários", "can_update") ? (
+                  {hasPermission(current_user.user.profile, "Usuários", "can_update") ? (
                     <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => {
                       handleEdit(user);
                       setUpdate(true);
@@ -197,7 +197,7 @@ function UsersPage(){
                       <Edit />
                     </IconButton>
                   ): null}
-                  {hasPermission(user.user.profile, "Usuários", "can_delete") ? (
+                  {hasPermission(current_user.user.profile, "Usuários", "can_delete") ? (
                     <IconButton
                       aria-label="delete"
                       onClick={() => {
