@@ -230,6 +230,7 @@ function UsersPage(){
             variant="standard"
             value={formData.name}
             onChange={handleInputChange}
+            required
           />
           <TextFieldStyled
             margin="dense"
@@ -240,6 +241,7 @@ function UsersPage(){
             variant="standard"
             value={formData.email}
             onChange={handleInputChange}
+            required
           />
           {selectedUser ? (
             null
@@ -253,6 +255,7 @@ function UsersPage(){
             variant="standard"
             value={formData.password}
             onChange={handleInputChange}
+            required
           />
           )}
           <FormControl fullWidth margin="dense">
@@ -263,6 +266,7 @@ function UsersPage(){
               value={formData.profile_id}
               onChange={handleInputChange}
               style={{ color: theme.palette.text.third }}
+              required
             >
                 {profiles.map((profile) => (
                   <MenuItem key={profile.id} value={profile.id} style={{ color: theme.palette.text.third }}>

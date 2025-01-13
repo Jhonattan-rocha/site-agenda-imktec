@@ -252,18 +252,22 @@ function Home(){
                     </MenuItemIcon>
                     {expanded && <MenuItemText primary="Calendario" />}
                 </MenuItem>
-                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/users" disableripple="true">
-                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
-                        <FaUser />
-                    </MenuItemIcon>
-                    {expanded && <MenuItemText primary="Usuários" />}
-                </MenuItem>
-                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/profiles" disableripple="true">
-                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
-                        <AiFillProfile />
-                    </MenuItemIcon>
-                    {expanded && <MenuItemText primary="Perfís" />}
-                </MenuItem>
+                { hasPermission(user.user.profile, "Usuários", "can_view") ? (
+                  <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/users" disableripple="true">
+                      <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
+                          <FaUser />
+                      </MenuItemIcon>
+                      {expanded && <MenuItemText primary="Usuários" />}
+                  </MenuItem>
+                ): null }
+                { hasPermission(user.user.profile, "perfís", "can_view") ? (
+                  <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/profiles" disableripple="true">
+                      <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
+                          <AiFillProfile />
+                      </MenuItemIcon>
+                      {expanded && <MenuItemText primary="Perfís" />}
+                  </MenuItem>
+                ): null }
             </MenuOptions>
           </StyledToolbar>
         </StyledAppBar>

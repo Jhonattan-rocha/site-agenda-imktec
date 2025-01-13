@@ -59,6 +59,7 @@ import * as user_actions from '../../store/modules/userReducer/actions';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
 import * as generic_actions from '../../store/modules/genericReducer/actions';
+import GenericSearch from '../../services/indivialStateSearch';
 
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
@@ -230,6 +231,7 @@ function CalendarPage(){
   const users = useSelector(state => state.userreducer?.users);
   const events = useSelector(state => state.eventsReducer?.events);
   const generics = useSelector(state => state.genericreducer?.generics);
+  const [mainEvents, setMainEvents] = useState([...events]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -410,8 +412,8 @@ function CalendarPage(){
 
   const eventsForSelectedDay = useMemo(() => {
     if (!selectedDay) return [];
-    return events.filter((event) => isSameDay(parseISO(event.date), selectedDay));
-  }, [events, selectedDay]);
+    return mainEvents.filter((event) => isSameDay(parseISO(event.date), selectedDay));
+  }, [mainEvents, selectedDay]);
   
   const handleAddUserToTask = () => {
     dispatch(
@@ -442,10 +444,10 @@ function CalendarPage(){
 
   useEffect(() => {
     if (selectedEvent) {
-      const updatedSelectedEvent = events.find((e) => e.id === selectedEvent.id);
+      const updatedSelectedEvent = mainEvents.find((e) => e.id === selectedEvent.id);
       setSelectedEvent(updatedSelectedEvent);
     }
-  }, [events, selectedEvent]);
+  }, [mainEvents, selectedEvent]);
 
   useEffect(() => {
     if (taskFormData?.id) {
@@ -466,6 +468,26 @@ function CalendarPage(){
       setUpdate(false);
     }
   }, [update, user, dispatch]);
+
+  useEffect(() => {
+    async function fetchSharedEvents(){
+      let share = await GenericSearch(user.token, "generic", 0, 0, `user_id+eq+${user.user.id}`, "EventUser");
+      let aux = []
+      for(let event of share){
+        aux.push(event.values.event_id);
+      }
+      let sheared_events_id = aux.join(",");
+
+      if(sheared_events_id){
+        let shared_events = await GenericSearch(user.token, "event", 0, 0, `id+in+${sheared_events_id}`, "Event");
+        setMainEvents([...events, ...shared_events]);
+      }else{
+        setMainEvents([...events]);
+      }
+    }
+
+    fetchSharedEvents();
+  }, [events, user]);
   
   return (
     <Grid container>
@@ -531,11 +553,11 @@ function CalendarPage(){
               >
                 <CalendarDayLabel>{format(day, 'd')}</CalendarDayLabel>
                 <Box sx={{overflow: 'hidden', width: '100%' }}>
-                  {events
+                  {mainEvents
                     .filter((event) => isSameDay(parseISO(event.date), day))
-                    .map((event) => (
+                    .map((event, index) => (
                       <Box
-                        key={event.id}
+                        key={event.id * index}
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEventClick(event, day);
@@ -691,7 +713,7 @@ function CalendarPage(){
                                   <AvatarsContainer>
                                     <Typography variant="caption" style={{ color: theme.palette.text.third }}>Usuários relacionados</Typography>
                                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        {Array.from(generics["TaskUser"]).map((item, index) => {
+                                        {Array.from(generics["TaskUser"] ?? new Set([])).map((item, index) => {
                                           let user = users.find(usr => usr.id === item.values.user_id);
                                           return (
                                               <React.Fragment key={index}>
@@ -874,7 +896,7 @@ function CalendarPage(){
                                   <AvatarsContainer>
                                     <Typography variant="caption" style={{ color: theme.palette.text.third }}>Usuários relacionados</Typography>
                                     <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        {Array.from(generics["EventUser"]).map((item, index) => {
+                                        {Array.from(generics["EventUser"] ?? new Set([])).map((item, index) => {
                                           let user = users.find(usr => usr.id === item.values.user_id);
                                           return (
                                               <React.Fragment key={index}>
