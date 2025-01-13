@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -14,6 +14,8 @@ import {
   Divider,
   Grid2 as Grid,
   Box,
+  TextField,
+  CircularProgress
 } from '@mui/material';
 import {
   AccountCircle,
@@ -24,7 +26,7 @@ import {
   ArrowRight,
   CalendarMonth,
 } from '@mui/icons-material';
-import { styled } from '@mui/system';
+import { padding, styled } from '@mui/system';
 import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
 import Login from '../Login';
 import CalendarPage from '../Calendar';
@@ -33,7 +35,8 @@ import UsersPage from '../Users';
 import { FaUser } from 'react-icons/fa';
 import ProfilesPage from '../Profiles';
 import { AiFillProfile } from 'react-icons/ai';
-import * as actions_auth from '../../store/modules/authReducer/actions';
+import * as auth_actions from '../../store/modules/authReducer/actions';
+import * as generic_actions from '../../store/modules/genericReducer/actions';
 import hasPermission from '../../services/has_permission';
 
 // Estilos personalizados (mantidos do exemplo anterior)
@@ -119,13 +122,84 @@ const Content = styled(Box)(({ theme, expanded }) => ({
   backgroundColor: theme.palette.background.default,
 }));
 
-function Home(){
-  const user = useSelector(state => state.authreducer);
+const NotificationsPopover = styled(Popover)(({ theme }) => ({
+  '& .MuiPopover-paper': {
+    width: 380,
+    maxHeight: 400, // Aumentei a altura máxima
+    overflow: 'auto',
+  },
+}));
+
+const NotificationsList = styled(List)(({ theme }) => ({
+  padding: 0,
+}));
+
+const NotificationItem = styled(ListItem)(({ theme }) => ({
+  padding: theme.spacing(1, 2),
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+  color: theme.palette.text.third
+}));
+
+const NotificationText = styled(ListItemText)(({ theme }) => ({
+  '& .MuiListItemText-primary': {
+    fontWeight: theme.typography.fontWeightMedium,
+    marginBottom: theme.spacing(0.5),
+    color: theme.palette.text.third
+  },
+  '& .MuiListItemText-secondary': {
+    fontSize: '0.8rem',
+    color: theme.palette.text.third,
+  },
+}));
+
+const SearchInput = styled(TextField)(({ theme }) => ({
+  '& .MuiInput-root': {
+    color: theme.palette.text.third, // Cor do texto digitado
+    borderColor: theme.palette.primary.contrastText,
+    padding: theme.spacing(2),
+    '&:before': {
+      borderColor: theme.palette.primary.contrastText, // Cor da linha antes de focar
+    },
+    '&:hover:not(.Mui-disabled):before': {
+      borderColor: theme.palette.primary.main, // Cor da linha no hover
+    },
+    '&:after': {
+      borderColor: theme.palette.primary.main, // Cor da linha ao focar
+    },
+  },
+  '& .MuiInputLabel-root': {
+    color: theme.palette.text.third,
+    '&.Mui-focused': {
+      color: theme.palette.primary.main,
+    },
+  },
+  '& .MuiSvgIcon-root': {
+    color: theme.palette.text.third,
+  },
+}));
+
+const LoadingMore = styled('div')(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'center',
+  padding: theme.spacing(1),
+}));
+
+function Home() {
+  const user = useSelector((state) => state.authreducer);
+  const generics = useSelector((state) => state.genericreducer?.generics);
   const [expanded, setExpanded] = useState(true);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [searchText, setSearchText] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [skip, setSkip] = useState(0);
+  const observer = useRef();
 
   const handleToggleSidebar = () => {
     setExpanded(!expanded);
@@ -141,6 +215,11 @@ function Home(){
 
   const handleOpenNotifications = (event) => {
     setAnchorElNotifications(event.currentTarget);
+    setSearchText('');
+    setSkip(0);
+    setNotifications([]);
+    setHasMore(true);
+    setIsLoading(false);
   };
 
   const handleCloseNotifications = () => {
@@ -148,17 +227,77 @@ function Home(){
   };
 
   useEffect(() => {
-    if(!user.isLoggedIn){
-      navigate("/login");
+    if (!user.isLoggedIn) {
+      navigate('/login');
     }
   }, [user, navigate]);
-  
+
+  const lastNotificationRef = useCallback(
+    (node) => {
+      if (isLoading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setSkip((prevSkip) => prevSkip + 10);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [isLoading, hasMore]
+  );
+
+  const handleSearchChange = (event) => {
+    setSearchText(event.target.value);
+    setSkip(0);
+    setNotifications([]);
+    setHasMore(true);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (anchorElNotifications && hasMore) {
+        setIsLoading(true);
+        await dispatch(
+          generic_actions.GENERICS_REQUEST({
+            skip: skip,
+            limit: 10,
+            filters: `message+ct+${searchText}`,
+            model: 'Notification',
+          })
+        );
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [anchorElNotifications, skip, searchText]);
+
+  useEffect(() => {
+    if (generics && generics['Notification']) {
+      const newNotifications = generics['Notification'].map((notification) => ({
+        ...notification.values,
+        id: notification.id
+      }));
+      const uniqueNotifications = [
+        ...notifications,
+        ...newNotifications.filter(
+          (newNot) => !notifications.some((not) => not.id === newNot.id)
+        ),
+      ];
+      uniqueNotifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+      setNotifications(uniqueNotifications);
+      setHasMore(generics['Notification'].length === 10);
+    }
+  }, [generics]);
+
   return (
-      <AppContainer container="true">
-        {!user.isLoggedIn ? (
-          null
-        ):(
-          <StyledAppBar position="fixed" expanded={(() => {return expanded ? "true":"false"})()}>
+    <AppContainer container={true}>
+      {!user.isLoggedIn ? null : (
+        <StyledAppBar
+          position="fixed"
+          expanded={(() => (expanded ? 'true' : 'false'))()}
+        >
           <StyledToolbar>
             <IconButton
               color="inherit"
@@ -176,10 +315,18 @@ function Home(){
               </Typography>
             )}
 
-            <Grid container justifyContent="center" spacing={1} sx={{ mt: 2, mb: 2 }}>
-              <Grid item="true">
+            <Grid
+              container
+              justifyContent="center"
+              spacing={1}
+              sx={{ mt: 2, mb: 2 }}
+            >
+              <Grid item={"true"}>
                 <Tooltip title="Open user menu" arrow>
-                  <IconButton onClick={handleOpenUserMenu} sx={{ p: 0, width: 40 }}>
+                  <IconButton
+                    onClick={handleOpenUserMenu}
+                    sx={{ p: 0, width: 40 }}
+                  >
                     <AccountCircle color="primary" fontSize="large" />
                   </IconButton>
                 </Tooltip>
@@ -197,31 +344,48 @@ function Home(){
                   }}
                 >
                   <List>
-                    <ListItem button="true" onClick={handleCloseUserMenu} disableripple="true">
+                    <ListItem
+                      button={"true"}
+                      onClick={handleCloseUserMenu}
+                      disableripple={"true"}
+                    >
                       <ListItemIcon>
                         <Settings color="primary" />
                       </ListItemIcon>
-                      <ListItemText style={{color: 'black'}} primary="Settings" />
+                      <ListItemText
+                        style={{ color: 'black' }}
+                        primary="Settings"
+                      />
                     </ListItem>
-                    <ListItem button="true" onClick={() => {
+                    <ListItem
+                      button={"true"}
+                      onClick={() => {
                         handleCloseUserMenu();
-                        dispatch(actions_auth.Loguot());
-                      }} disableripple="true">
+                        dispatch(auth_actions.Loguot());
+                      }}
+                      disableripple={"true"}
+                    >
                       <ListItemIcon>
                         <ExitToApp color="primary" />
                       </ListItemIcon>
-                      <ListItemText style={{color: 'black'}} primary="Logout" />
+                      <ListItemText
+                        style={{ color: 'black' }}
+                        primary="Logout"
+                      />
                     </ListItem>
                   </List>
                 </Popover>
               </Grid>
-              <Grid item="true">
+              <Grid item={"true"}>
                 <Tooltip title="Notifications" arrow>
-                  <IconButton onClick={handleOpenNotifications} sx={{ p: 0, width: 40 }}>
+                  <IconButton
+                    onClick={handleOpenNotifications}
+                    sx={{ p: 0, width: 40 }}
+                  >
                     <Notifications color="primary" fontSize="large" />
                   </IconButton>
                 </Tooltip>
-                <Popover
+                <NotificationsPopover
                   open={Boolean(anchorElNotifications)}
                   anchorEl={anchorElNotifications}
                   onClose={handleCloseNotifications}
@@ -234,54 +398,124 @@ function Home(){
                     horizontal: 'center',
                   }}
                 >
-                  <List>
-                    <ListItem>
-                      <ListItemText primary="No new notifications" style={{color: 'black'}} />
-                    </ListItem>
-                  </List>
-                </Popover>
+                  <SearchInput
+                    placeholder="Pesquisar notificações..."
+                    value={searchText}
+                    onChange={handleSearchChange}
+                    fullWidth
+                    variant="standard"
+                  />
+                  <NotificationsList>
+                    {notifications.map((notification, index) => {
+                      if (notifications.length === index + 1) {
+                        return (
+                          <NotificationItem
+                            ref={lastNotificationRef}
+                            key={notification.id}
+                          >
+                            <NotificationText
+                              primary={notification.message}
+                              secondary={new Date(
+                                notification.date
+                              ).toLocaleString()}
+                            />
+                          </NotificationItem>
+                        );
+                      } else {
+                        return (
+                          <NotificationItem key={notification.id}>
+                            <NotificationText
+                              primary={notification.message}
+                              secondary={new Date(
+                                notification.date
+                              ).toLocaleString()}
+                            />
+                          </NotificationItem>
+                        );
+                      }
+                    })}
+                    {isLoading && (
+                      <LoadingMore>
+                        <CircularProgress size={24} />
+                      </LoadingMore>
+                    )}
+                    {!isLoading && notifications.length === 0 && (
+                      <NotificationItem>
+                        <NotificationText primary="Nenhuma notificação encontrada." />
+                      </NotificationItem>
+                    )}
+                  </NotificationsList>
+                </NotificationsPopover>
               </Grid>
             </Grid>
 
-            <Divider sx={{ my: 2, width: '80%', borderColor: 'rgba(255,255,255,0.2)' }} />
+            <Divider
+              sx={{ my: 2, width: '80%', borderColor: 'rgba(255,255,255,0.2)' }}
+            />
 
             <MenuOptions>
-                <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/calendar" disableripple="true">
-                    <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
-                        <CalendarMonth />
-                    </MenuItemIcon>
-                    {expanded && <MenuItemText primary="Calendario" />}
+              <MenuItem
+                button={"true"}
+                expanded={(() => (expanded ? 'true' : 'false'))()}
+                component={RouterLink}
+                to="/calendar"
+                disableripple={"true"}
+              >
+                <MenuItemIcon expanded={(() => (expanded ? 'true' : 'false'))()}>
+                  <CalendarMonth />
+                </MenuItemIcon>
+                {expanded && <MenuItemText primary="Calendario" />}
+              </MenuItem>
+              {hasPermission(user.user.profile, 'Usuários', 'can_view') ? (
+                <MenuItem
+                  button={"true"}
+                  expanded={(() => (expanded ? 'true' : 'false'))()}
+                  component={RouterLink}
+                  to="/users"
+                  disableripple={"true"}
+                >
+                  <MenuItemIcon
+                    expanded={(() => (expanded ? 'true' : 'false'))()}
+                  >
+                    <FaUser />
+                  </MenuItemIcon>
+                  {expanded && <MenuItemText primary="Usuários" />}
                 </MenuItem>
-                { hasPermission(user.user.profile, "Usuários", "can_view") ? (
-                  <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/users" disableripple="true">
-                      <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
-                          <FaUser />
-                      </MenuItemIcon>
-                      {expanded && <MenuItemText primary="Usuários" />}
-                  </MenuItem>
-                ): null }
-                { hasPermission(user.user.profile, "perfís", "can_view") ? (
-                  <MenuItem button="true" expanded={(() => {return expanded ? "true":"false"})()} component={RouterLink} to="/profiles" disableripple="true">
-                      <MenuItemIcon expanded={(() => {return expanded ? "true":"false"})()}>
-                          <AiFillProfile />
-                      </MenuItemIcon>
-                      {expanded && <MenuItemText primary="Perfís" />}
-                  </MenuItem>
-                ): null }
+              ) : null}
+              {hasPermission(user.user.profile, 'perfís', 'can_view') ? (
+                <MenuItem
+                  button={"true"}
+                  expanded={(() => (expanded ? 'true' : 'false'))()}
+                  component={RouterLink}
+                  to="/profiles"
+                  disableripple={"true"}
+                >
+                  <MenuItemIcon
+                    expanded={(() => (expanded ? 'true' : 'false'))()}
+                  >
+                    <AiFillProfile />
+                  </MenuItemIcon>
+                  {expanded && <MenuItemText primary="Perfís" />}
+                </MenuItem>
+              ) : null}
             </MenuOptions>
           </StyledToolbar>
         </StyledAppBar>
-        )}
-        <Content expanded={(() => {return expanded ? "true":"false"})()}>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            { hasPermission(user.user.profile, "Usuários", "can_view") ? <Route path='/users' element={<UsersPage></UsersPage>} />: null }
-            { hasPermission(user.user.profile, "perfís", "can_view") ? <Route path='/profiles' element={<ProfilesPage></ProfilesPage>} />: null }
-          </Routes>
-        </Content>
-      </AppContainer>
+      )}
+      <Content expanded={(() => (expanded ? 'true' : 'false'))()}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/calendar" element={<CalendarPage />} />
+          {hasPermission(user.user.profile, 'Usuários', 'can_view') ? (
+            <Route path="/users" element={<UsersPage />} />
+          ) : null}
+          {hasPermission(user.user.profile, 'perfís', 'can_view') ? (
+            <Route path="/profiles" element={<ProfilesPage />} />
+          ) : null}
+        </Routes>
+      </Content>
+    </AppContainer>
   );
-};
+}
 
 export default Home;

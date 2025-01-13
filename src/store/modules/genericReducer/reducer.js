@@ -12,6 +12,7 @@ const initialState = {
         "Logger": [],
         "Events": [],
         "Tasks": [],
+        "Notification": []
     },
 }
 
