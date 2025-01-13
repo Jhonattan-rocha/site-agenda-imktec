@@ -411,9 +411,10 @@ function CalendarPage(){
 
   const daysInMonth = useMemo(() => {
     if (view === 'month') {
+      let date_aux = endOfMonth(currentDate);
       return eachDayOfInterval({
         start: startOfMonth(currentDate),
-        end: endOfMonth(currentDate),
+        end: date_aux.setDate(date_aux.getDate() === 31 ? date_aux.getDate() + 4 : date_aux.getDate() === 30 ? date_aux.getDate() + 5 : date_aux.getDate() + 7),
       });
     } else {
       return eachDayOfInterval({
