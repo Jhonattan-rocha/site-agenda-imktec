@@ -42,6 +42,26 @@ export function EVENTS_CREATE_FALURE(payload){
     };
 }
 
+export function EVENTS_DUPLICATE_CREATE_REQUEST(payload){
+    return {
+        type: types.EVENTS_DUPLICATE_CREATE_REQUEST,
+        payload: payload,  
+    };
+}
+
+export function EVENTS_DUPLICATE_CREATE_SUCCESS(payload){
+    return {
+        type: types.EVENTS_DUPLICATE_CREATE_SUCCESS,
+        payload: payload
+    };
+}
+
+export function EVENTS_DUPLICATE_CREATE_FALURE(payload){
+    return  {
+        type: types.EVENTS_DUPLICATE_CREATE_FALURE,
+        payload: payload,
+    };
+}
 
 export function EVENTS_UPDATE_REQUEST(payload){
     return {

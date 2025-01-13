@@ -36,7 +36,8 @@ import {
   Update,
   ArrowLeft,
   UpdateRounded,
-  PlusOne
+  PlusOne,
+  ControlPointDuplicate
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import {
@@ -258,11 +259,21 @@ function CalendarPage(){
     ready: false,
   });
 
+  const convertDate = (date = new Date(), pattern = "") => {
+    try{
+      return format(date, pattern);
+    }catch(err) {
+      return format(new Date(), pattern);
+    }
+  }
+
   const handleTaskFormChange = (field, value) => {
-    setTaskFormData({
-      ...taskFormData,
-      [field]: value,
-    });
+    try{
+      setTaskFormData({
+        ...taskFormData,
+        [field]: value,
+      });
+    }catch(err) {};
   };
 
   const handleCreateTask = () => {
@@ -274,7 +285,7 @@ function CalendarPage(){
     setTaskFormData({
       name: '',
       desc: '',
-      date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+      date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
       ready: false,
     });
     setIsTaskModalOpen(false);
@@ -290,7 +301,7 @@ function CalendarPage(){
     setTaskFormData({
       name: '',
       desc: '',
-      date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+      date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
       ready: false,
       private: false
     });
@@ -304,7 +315,7 @@ function CalendarPage(){
       setTaskFormData({
         name: '',
         desc: '',
-        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
         ready: false,
       });
       setIsTaskModalOpen(false);
@@ -313,10 +324,12 @@ function CalendarPage(){
   };
 
   const handleEventFormChange = (field, value) => {
-    setEventFormData({
-      ...eventFormData,
-      [field]: value,
-    });
+    try{
+      setEventFormData({
+        ...eventFormData,
+        [field]: value,
+      });
+    }catch(err) {};
   };
   const handleCreateEvent = () => {
     
@@ -329,7 +342,7 @@ function CalendarPage(){
 
     setEventFormData({
       name: '',
-      date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+      date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
       desc: '',
       private: false
     });
@@ -343,7 +356,7 @@ function CalendarPage(){
       }));
       setEventFormData({
         name: '',
-        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
         desc: '',
       });
       setIsEventModalOpen(false);
@@ -355,7 +368,7 @@ function CalendarPage(){
     if (eventFormData.id === eventId) {
       setEventFormData({
         name: '',
-        date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+        date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
         desc: '',
         private: false
       });
@@ -518,7 +531,7 @@ function CalendarPage(){
               <ChevronLeft />
             </IconButton>
             <Typography variant="h6" sx={{ mx: 2 }}>
-              {format(currentDate, 'MMMM, yyyy', { locale: ptBR })}
+              {convertDate(currentDate, 'MMMM, yyyy', { locale: ptBR })}
             </Typography>
             <IconButton
               style={{ width: 40 }}
@@ -551,7 +564,7 @@ function CalendarPage(){
                 isToday={isSameDay(day, new Date())}
                 onClick={() => handleDrawerOpen(day)}
               >
-                <CalendarDayLabel>{format(day, 'd')}</CalendarDayLabel>
+                <CalendarDayLabel>{convertDate(day, 'd')}</CalendarDayLabel>
                 <Box sx={{overflow: 'hidden', width: '100%' }}>
                   {mainEvents
                     .filter((event) => isSameDay(parseISO(event.date), day))
@@ -560,11 +573,14 @@ function CalendarPage(){
                         key={event.id * index}
                         onClick={(e) => {
                           e.stopPropagation();
+                          setTimeout(() => {
+                            setUpdate(true);
+                          }, 100);
                           handleEventClick(event, day);
                         }}
                         sx={{
-                          backgroundColor: 'primary.main',
-                          color: 'primary.contrastText',
+                          backgroundColor: event?.taks?.filter(task => new Date() > new Date(task.date) && !task.ready).length ? 'white': 'primary.main',
+                          color: event?.taks?.filter(task => new Date() > new Date(task.date) && !task.ready).length ? 'black': "primary.contrastText",
                           padding: 0.5,
                           marginBottom: 0.5,
                           borderRadius: 1,
@@ -572,6 +588,7 @@ function CalendarPage(){
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
+                          fontSize: "12px",
                           '&:hover': {
                             opacity: 0.8
                           },
@@ -590,7 +607,7 @@ function CalendarPage(){
         <StyledDrawer variant="persistent" anchor="right" open={drawerOpen}>
             <DrawerHeader>
                 <Typography variant='h6' sx={{marginRight: 'auto'}}>
-                    {selectedDay && format(selectedDay, 'dd MMMM, yyyy', { locale: ptBR })}
+                    {selectedDay && convertDate(selectedDay, 'dd MMMM, yyyy', { locale: ptBR })}
                 </Typography>
                 <IconButton style={{ width: 40 }} onClick={handleDrawerClose}>
                 <ChevronRight />
@@ -643,7 +660,7 @@ function CalendarPage(){
                             setTaskFormData({
                               name: '',
                               desc: '',
-                              date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                              date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
                               ready: false,
                             });
                             setTimeout(() => {
@@ -809,7 +826,16 @@ function CalendarPage(){
                                 }}
                                 secondaryAction={
                                     <>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="update" onClick={(e) => {
+                                      <IconButton style={{ width: 40 }} edge="end" aria-label="duplicate" title='Duplicar' onClick={(e) => {
+                                          e.stopPropagation();
+                                          dispatch(event_actions.EVENTS_DUPLICATE_CREATE_REQUEST(event));
+                                          setTimeout(() => {
+                                            setUpdate(true);
+                                          }, 100);
+                                        }}>
+                                          <ControlPointDuplicate />
+                                      </IconButton>
+                                      <IconButton style={{ width: 40 }} edge="end" aria-label="update" title='Editar' onClick={(e) => {
                                           e.stopPropagation();
                                           setEventFormData(event);
                                           setTimeout(() => {
@@ -819,12 +845,12 @@ function CalendarPage(){
                                         }}>
                                           <Update />
                                       </IconButton>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
+                                      <IconButton style={{ width: 40 }} edge="end" aria-label="delete" title='Apagar' onClick={(e) => {
                                           e.stopPropagation();
                                           handleDeleteEvent(event.id);
                                           setUpdate(true);
                                         }}>
-                                          <Delete />
+                                          <Delete style={{ color: 'red' }} />
                                       </IconButton>
                                     </>
                                 }
@@ -833,7 +859,7 @@ function CalendarPage(){
                                     primary={event.name}
                                     secondary={
                                         <>
-                                            {format(parseISO(event.date), "HH:mm", { locale: ptBR })}
+                                            {convertDate(parseISO(event.date), "HH:mm", { locale: ptBR })}
                                             {event.desc && ` - ${event.desc}`}
                                         </>
                                     }
@@ -882,7 +908,7 @@ function CalendarPage(){
                                 type="datetime-local"
                                 fullWidth
                                 variant="standard"
-                                value={format(new Date(eventFormData.date), "yyyy-MM-dd'T'HH:mm")}
+                                value={convertDate(new Date(eventFormData.date), "yyyy-MM-dd'T'HH:mm")}
                                 onChange={(e) => handleEventFormChange('date', e.target.value)}
                                 slotProps={{
                                     input: {
@@ -901,14 +927,14 @@ function CalendarPage(){
                                           return (
                                               <React.Fragment key={index}>
                                                 <Typography variant="caption" style={{ color: theme.palette.text.third, fontSize: "16px" }}>{user.name}</Typography>
-                                                <IconButton style={{ width: 40 }} onClick={() => {
+                                                <IconButton style={{ width: 40 }} title='Deletar' onClick={() => {
                                                   dispatch(generic_actions.GENERIC_DELETE_REQUEST({
                                                     id: item.values.id,
                                                     model: "EventUser"
                                                   }));
                                                   setUpdate(true);
                                                 }}>
-                                                  <Delete></Delete>
+                                                  <Delete style={{ color: 'red' }}></Delete>
                                                 </IconButton>
                                               </React.Fragment>
                                           );
@@ -960,7 +986,7 @@ function CalendarPage(){
                                           width: '100%'
                                         }}
                                       />
-                                    <IconButton style={{ width: 40, margin: 'auto' }} onClick={() => {
+                                    <IconButton style={{ width: 40, margin: 'auto' }} title='Adicionar' onClick={() => {
                                       handleAddUserToEvent();
                                     }}>
                                       <Add />
@@ -1000,8 +1026,8 @@ function CalendarPage(){
                         setEventFormData({
                           name: '',
                           date: selectedDay
-                            ? format(selectedDay, "yyyy-MM-dd'T'HH:mm")
-                            : format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                            ? convertDate(selectedDay, "yyyy-MM-dd'T'HH:mm")
+                            : convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
                           desc: '',
                           private: false,
                         });

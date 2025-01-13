@@ -33,6 +33,16 @@ export default function recuder(state = initialState, action){
             return state;
         }
 
+        case type.EVENTS_DUPLICATE_CREATE_SUCCESS: {
+            toast.success("Evento duplicado com sucesso");
+            return state;
+        }
+
+        case type.EVENTS_DUPLICATE_CREATE_FALURE: {
+            toast.error(`Erro ao duplicar o evento`);
+            return state;
+        }
+
         case type.EVENTS_UPDATE_SUCCESS: {
             toast.success("Evento editado com sucesso");
             return state;
