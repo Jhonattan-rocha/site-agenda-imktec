@@ -395,6 +395,7 @@ function CalendarPage(){
   const handleDrawerClose = () => {
     setDrawerOpen(false);
     setSelectedEvent(null);
+    setUpdate(true);
   };
 
   const handleViewChange = (event, newView) => {
@@ -405,6 +406,7 @@ function CalendarPage(){
 
   const handleDateChange = (date) => {
     setCurrentDate(date);
+    setUpdate(true);
   };
 
   const handleEventClick = (event, day) => {
@@ -1011,7 +1013,9 @@ function CalendarPage(){
                         title='Confirmação de deleção' 
                         cancelButtonText='Não' 
                         confirmButtonText='Sim' 
-                        onCancel={() => {}} />
+                        onCancel={() => {
+                          setUpdate(true);
+                        }} />
                       </>
                     }
                   >

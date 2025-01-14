@@ -59,7 +59,7 @@ function ConfirmationDialog({
   };
 
   return (
-    <div>
+    <>
       {iconButton ? (
           <IconButton
             aria-label="confirm"
@@ -128,7 +128,7 @@ function ConfirmationDialog({
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </>
   );
 }
 

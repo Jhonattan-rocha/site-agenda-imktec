@@ -47,18 +47,6 @@ export default createGlobalStyle`
         overflow-x: hidden;
     }
 
-    button{
-        width: 200px;
-        height: 40px;
-        padding: 10px;
-        cursor: pointer;
-        background-color: #050A30;
-        color: white;
-        font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
-        border:0;
-        border-radius: 10px;
-    }
-
     a {
         text-decoration: none;
     }

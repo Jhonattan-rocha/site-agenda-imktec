@@ -224,7 +224,7 @@ function UsersPage() {
                       {user.profile ? user.profile.name : ''}
                     </StyledTableCell>
                     <StyledTableCell align="right">
-                      <Box>
+                      <Box display={'flex'} flexDirection={'row'}>
                         {hasPermission(
                           current_user.user.profile,
                           'Usuários',

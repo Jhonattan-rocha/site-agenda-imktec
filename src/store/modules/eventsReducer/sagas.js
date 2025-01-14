@@ -40,8 +40,10 @@ function* DuplicateEvents({ payload }) {
         }
         const response = yield call(axios.post, `${alias}`+"/event/", payload);
 
-        for(let task of payload.tasks){
-            yield put(task_actions.TASKS_CREATE_REQUEST(task));
+        if(response.data){
+            for(let task of payload.tasks){
+                yield put(task_actions.TASKS_CREATE_REQUEST({...task, event_id: response.data.id}));
+            }
         }
 
         yield put(actions.EVENTS_DUPLICATE_CREATE_SUCCESS({ ...response.data }));

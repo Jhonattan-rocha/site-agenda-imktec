@@ -162,7 +162,7 @@ const SearchInput = styled(TextField)(({ theme }) => ({
   '& .MuiInput-root': {
     color: theme.palette.text.third,
     borderColor: theme.palette.primary.contrastText,
-    padding: theme.spacing(2),
+    padding: theme.spacing(1),
     '&:before': {
       borderColor: theme.palette.primary.contrastText,
     },

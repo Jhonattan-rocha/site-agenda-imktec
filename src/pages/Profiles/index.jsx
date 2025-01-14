@@ -46,7 +46,7 @@ const StyledFab = styled(Button)(({ theme }) => ({
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
-    color: theme.palette.text.third
+    color: theme.palette.text.third,
 }));
 
 const TextFieldStyled = styled(TextField)(({ theme }) => ({
@@ -194,26 +194,28 @@ function ProfilesPage(){
                         </StyledTableCell>
                         <StyledTableCell>{profile.name}</StyledTableCell>
                         <StyledTableCell align="right">
-                        {hasPermission(user.user.profile, "perfís", "can_update") ? (
-                            <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(profile)}>
-                                <Edit />
-                            </IconButton>
-                        ): null}
-                        {hasPermission(user.user.profile, "perfís", "can_delete") ? (
-                          <ConfirmationDialog 
-                          iconChoose={"delete"} 
-                          iconColor={theme.palette.danger.delete} 
-                          message='Tem certeza que deseja deletar?' 
-                          onConfirm={() => {
-                              handleDelete(profile);
-                              setUpdate(true);
-                          }} 
-                          iconButton={true} 
-                          title='Confirmação de deleção' 
-                          cancelButtonText='Não' 
-                          confirmButtonText='Sim' 
-                          onCancel={() => {}} />
-                        ): null}
+                            <div style={{ display: 'flex', flexDirection: 'row', width: 'fit-content', marginLeft: 'auto' }}>
+                                {hasPermission(user.user.profile, "perfís", "can_update") ? (
+                                    <IconButton style={{ width: 40 }} aria-label="edit" onClick={() => handleEdit(profile)}>
+                                        <Edit />
+                                    </IconButton>
+                                ): null}
+                                {hasPermission(user.user.profile, "perfís", "can_delete") ? (
+                                <ConfirmationDialog 
+                                iconChoose={"delete"} 
+                                iconColor={theme.palette.danger.delete} 
+                                message='Tem certeza que deseja deletar?' 
+                                onConfirm={() => {
+                                    handleDelete(profile);
+                                    setUpdate(true);
+                                }} 
+                                iconButton={true} 
+                                title='Confirmação de deleção' 
+                                cancelButtonText='Não' 
+                                confirmButtonText='Sim' 
+                                onCancel={() => {}} />
+                                ): null}
+                            </div>
                         </StyledTableCell>
                     </TableRow>
                 ))}
