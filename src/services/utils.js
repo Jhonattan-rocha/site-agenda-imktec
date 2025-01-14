@@ -1,5 +1,3 @@
-import Lang from '../translations';
-
 export function getAttribute(obj={}, key="") {
     if (obj === null || typeof obj !== 'object') {
         return undefined;

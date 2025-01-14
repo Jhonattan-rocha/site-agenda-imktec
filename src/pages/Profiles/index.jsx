@@ -30,6 +30,7 @@ import * as profile_actions from '../../store/modules/userProfileReducer/actions
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
 import hasPermission from '../../services/has_permission';
+import ConfirmationDialog from '../../GlobalComponents/confirmDialog';
 
 // Estilos
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
@@ -199,13 +200,19 @@ function ProfilesPage(){
                             </IconButton>
                         ): null}
                         {hasPermission(user.user.profile, "perfís", "can_delete") ? (
-                            <IconButton
-                                aria-label="delete"
-                                onClick={() => handleDelete(profile)}
-                                style={{ width: 40 }}
-                            >
-                                <Delete />
-                            </IconButton>
+                          <ConfirmationDialog 
+                          iconChoose={"delete"} 
+                          iconColor={theme.palette.danger.delete} 
+                          message='Tem certeza que deseja deletar?' 
+                          onConfirm={() => {
+                              handleDelete(profile);
+                              setUpdate(true);
+                          }} 
+                          iconButton={true} 
+                          title='Confirmação de deleção' 
+                          cancelButtonText='Não' 
+                          confirmButtonText='Sim' 
+                          onCancel={() => {}} />
                         ): null}
                         </StyledTableCell>
                     </TableRow>

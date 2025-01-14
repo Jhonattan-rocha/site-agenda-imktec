@@ -62,6 +62,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '../../styles/AppThemeProvider';
 import * as generic_actions from '../../store/modules/genericReducer/actions';
 import GenericSearch from '../../services/indivialStateSearch';
+import ConfirmationDialog from '../../GlobalComponents/confirmDialog';
 
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
@@ -687,18 +688,19 @@ function CalendarPage(){
                         >
                           <UpdateRounded />
                         </IconButton>
-                        <IconButton
-                          style={{ width: 40 }}
-                          edge="end"
-                          aria-label="delete"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                        <ConfirmationDialog 
+                        iconChoose={"delete"} 
+                        iconColor={theme.palette.danger.delete} 
+                        message='Tem certeza que deseja deletar?' 
+                        onConfirm={() => {
                             handleDeleteTask(task.id);
                             setUpdate(true);
-                          }}
-                        >
-                          <Delete />
-                        </IconButton>
+                        }} 
+                        iconButton={true} 
+                        title='Confirmação de deleção' 
+                        cancelButtonText='Não' 
+                        confirmButtonText='Sim' 
+                        onCancel={() => {}} />
                       </>
                     }
                   >
@@ -956,7 +958,7 @@ function CalendarPage(){
                 {eventsForSelectedDay.map((event) => (
                   <ListItem
                     key={event.id}
-                    button
+                    button={"true"}
                     onClick={() => {
                       setSelectedEvent(event);
                     }}
@@ -997,19 +999,19 @@ function CalendarPage(){
                         >
                           <Update />
                         </IconButton>
-                        <IconButton
-                          style={{ width: 40 }}
-                          edge="end"
-                          aria-label="delete"
-                          title="Apagar"
-                          onClick={(e) => {
-                            e.stopPropagation();
+                        <ConfirmationDialog 
+                        iconChoose={"delete"} 
+                        iconColor={theme.palette.danger.delete} 
+                        message='Tem certeza que deseja deletar?' 
+                        onConfirm={() => {
                             handleDeleteEvent(event.id);
                             setUpdate(true);
-                          }}
-                        >
-                          <Delete style={{ color: 'red' }} />
-                        </IconButton>
+                        }} 
+                        iconButton={true} 
+                        title='Confirmação de deleção' 
+                        cancelButtonText='Não' 
+                        confirmButtonText='Sim' 
+                        onCancel={() => {}} />
                       </>
                     }
                   >

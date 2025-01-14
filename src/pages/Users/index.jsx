@@ -29,10 +29,12 @@ import * as user_actions from '../../store/modules/userReducer/actions';
 import * as profile_actions from '../../store/modules/userProfileReducer/actions';
 import { useTheme } from '../../styles/AppThemeProvider';
 import hasPermission from '../../services/has_permission';
+import ConfirmationDialog from '../../GlobalComponents/confirmDialog';
 
 // Estilos
 const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
   marginTop: theme.spacing(2),
+  width: '100%'
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
@@ -244,16 +246,18 @@ function UsersPage() {
                           'Usuários',
                           'can_delete'
                         ) && (
-                          <IconButton
-                            aria-label="delete"
-                            onClick={() => {
+                          <ConfirmationDialog 
+                          iconChoose={"delete"} 
+                          iconColor={theme.palette.danger.delete} 
+                          message='Tem certeza que deseja deletar?' 
+                          onConfirm={() => {
                               handleDelete(user.id);
                               setUpdate(true);
-                            }}
-                            style={{ width: 40 }}
-                          >
-                            <Delete />
-                          </IconButton>
+                          }} iconButton={true} 
+                          title='Confirmação de deleção' 
+                          cancelButtonText='Não' 
+                          confirmButtonText='Sim' 
+                          onCancel={() => {}} />
                         )}
                       </Box>
                     </StyledTableCell>
@@ -270,7 +274,7 @@ function UsersPage() {
           {selectedUser ? 'Editar Usuário' : 'Adicionar Usuário'}
         </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
+          <Grid container display={'flex'} flexDirection={'column'} spacing={2}>
             <Grid item={"true"} xs={12}>
               <TextFieldStyled
                 autoFocus

@@ -26,6 +26,9 @@ export const useTheme = () => {
           custom: {
             chatIcon: '#36454F', // Cinza Escuro para o ícone de chat
           },
+          danger: {
+            delete: '#f44336',
+          },
           error: {
             main: '#f44336', // Vermelho para erros
           },
