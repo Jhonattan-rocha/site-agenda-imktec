@@ -53,6 +53,7 @@ import {
   isSameDay,
   parseISO,
 } from 'date-fns';
+import MenuIcon from '@mui/icons-material/Menu';
 import { ptBR } from 'date-fns/locale';
 import * as event_actions from '../../store/modules/eventsReducer/actions';
 import * as task_actions from '../../store/modules/tasksReducer/actions';
@@ -80,20 +81,8 @@ const CalendarHeader = styled('div')(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const CalendarGrid = styled('div')(({ theme, view }) => ({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(7, 1fr)',
-  gridTemplateRows: view === 'month' ? 'repeat(6, 1fr)' : 'repeat(1, 1fr)',
-  gap: theme.spacing(0),
-  padding: theme.spacing(2),
-  flexGrow: 1,
-  border: `1px solid ${theme.palette.divider}`,
-  borderRadius: '4px',
-  overflow: 'hidden',
-  height: '75vh',
-}));
-
-const CalendarDay = styled('div')(({ theme, isCurrentMonth, isToday }) => ({
+// Estilos
+const CalendarDay = styled('div')(({ theme, isCurrentMonth, isToday, isMobile }) => ({
   backgroundColor: isToday
     ? theme.palette.primary.light
     : isCurrentMonth
@@ -115,14 +104,29 @@ const CalendarDay = styled('div')(({ theme, isCurrentMonth, isToday }) => ({
   justifyContent: 'flex-start',
   alignItems: 'flex-start',
   overflow: 'hidden',
+  height: isMobile ? '50px' : 'auto', // Ajuste para a altura em mobile
 }));
 
-const CalendarDayLabel = styled('span')(({ theme }) => ({
+const CalendarDayLabel = styled('span')(({ theme, isMobile }) => ({
   fontWeight: theme.typography.fontWeightMedium,
   color: theme.palette.text.third,
   width: '100%',
   display: 'flex',
   justifyContent: 'center',
+  fontSize: isMobile ? '12px' : 'inherit', // Ajuste para o tamanho da fonte em mobile
+}));
+
+const CalendarGrid = styled('div')(({ theme, view, isMobile }) => ({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(7, 1fr)',
+  gridTemplateRows: view === 'month' ? isMobile ? 'repeat(6, 50px)' : 'repeat(6, 1fr)' : isMobile ? 'repeat(1, 50px)': 'repeat(1, 1fr)', // Ajuste para a altura das linhas em mobile
+  gap: theme.spacing(0),
+  padding: theme.spacing(2),
+  flexGrow: 1,
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: '4px',
+  overflow: 'hidden',
+  height: '75vh',
 }));
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
@@ -232,6 +236,7 @@ function CalendarPage(){
   const users = useSelector(state => state.userreducer?.users);
   const events = useSelector(state => state.eventsReducer?.events);
   const generics = useSelector(state => state.genericreducer?.generics);
+  const [isMobile, setIsMobile] = useState(false);
   const [mainEvents, setMainEvents] = useState([...events]);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
@@ -502,23 +507,38 @@ function CalendarPage(){
 
     fetchSharedEvents();
   }, [events, user]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768); // Define isMobile como true se a largura da tela for menor que 768px (você pode ajustar esse valor)
+      if (window.innerWidth >= 768) {
+        setIsMobile(false); // Fechar a drawer se a tela voltar a ser maior que 600px
+      }
+    };
+  
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Verifica o tamanho da tela ao carregar o componente
+  
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   return (
     <Grid container>
       <Grid
         item={"true"}
         xs={12}
-        md={drawerOpen ? 9 : 12}
+        md={drawerOpen && !isMobile ? 9 : 12} // Ajuste para a largura em mobile
         sx={{
           transition: (theme) =>
             theme.transitions.create(['margin', 'width'], {
               easing: theme.transitions.easing.sharp,
               duration: theme.transitions.duration.leavingScreen,
             }),
-          ...(drawerOpen && {
-            width: (theme) => `calc(100% - ${drawerWidth}px)`,
-            marginRight: (theme) => `${drawerWidth}px`,
-          }),
+          ...(drawerOpen &&
+            !isMobile && { // Ajuste para a largura em mobile
+              width: (theme) => `calc(100% - ${drawerWidth}px)`,
+              marginRight: (theme) => `${drawerWidth}px`,
+            }),
           width: '100%',
           height: '100%',
         }}
@@ -526,47 +546,53 @@ function CalendarPage(){
         <CalendarContainer>
           <CalendarHeader>
             <IconButton
-              style={{ width: 40 }}
+              sx={{ width: isMobile ? '25%' : 40 }} // Ajuste para o tamanho do botão em mobile
               onClick={() => handleDateChange(subMonths(currentDate, 1))}
             >
               <ChevronLeft />
             </IconButton>
-            <Typography variant="h6" sx={{ mx: 2 }}>
-              {convertDate(currentDate, 'MMMM, yyyy', { locale: ptBR })}
+            <Typography variant={isMobile ? 'subtitle1' : 'h6'} sx={{ mx: 2, textAlign: 'center', width: isMobile ? '50%' : 'auto' }}>
+              {convertDate(currentDate, isMobile ? 'MMM, yyyy' : 'MMMM, yyyy', { locale: ptBR })}
             </Typography>
             <IconButton
-              style={{ width: 40 }}
+              sx={{ width: isMobile ? '25%' : 40 }} // Ajuste para o tamanho do botão em mobile
               onClick={() => handleDateChange(addMonths(currentDate, 1))}
             >
               <ChevronRight />
             </IconButton>
             <Box sx={{ flexGrow: 1 }} />
-
-            <StyledToggleButtonGroup
-              value={view}
-              exclusive
-              onChange={handleViewChange}
-              aria-label="calendar view"
-            >
-              <ToggleButton value="month" aria-label="month view">
-                <CalendarToday />
-              </ToggleButton>
-              <ToggleButton value="week" aria-label="week view">
-                <ViewWeek />
-              </ToggleButton>
-            </StyledToggleButtonGroup>
-
+            
+            {isMobile ? ( // Botão para abrir o Drawer em mobile
+              <IconButton style={{ width: 40 }} onClick={() => setDrawerOpen(!drawerOpen)}>
+                <MenuIcon />
+              </IconButton>
+            ) : (
+              <StyledToggleButtonGroup
+                value={view}
+                exclusive
+                onChange={handleViewChange}
+                aria-label="calendar view"
+              >
+                <ToggleButton value="month" aria-label="month view">
+                  <CalendarToday />
+                </ToggleButton>
+                <ToggleButton value="week" aria-label="week view">
+                  <ViewWeek />
+                </ToggleButton>
+              </StyledToggleButtonGroup>
+            )}
           </CalendarHeader>
-          <CalendarGrid view={view}>
+          <CalendarGrid view={view} isMobile={isMobile}>
             {daysInMonth.map((day) => (
               <CalendarDay
                 key={day.toString()}
                 isCurrentMonth={isSameMonth(day, currentDate)}
                 isToday={isSameDay(day, new Date())}
                 onClick={() => handleDrawerOpen(day)}
+                isMobile={isMobile}
               >
-                <CalendarDayLabel>{convertDate(day, 'd')}</CalendarDayLabel>
-                <Box sx={{overflow: 'hidden', width: '100%' }}>
+                <CalendarDayLabel isMobile={isMobile}>{convertDate(day, 'd')}</CalendarDayLabel>
+                <Box sx={{ overflow: 'hidden', width: '100%' }}>
                   {mainEvents
                     .filter((event) => isSameDay(parseISO(event.date), day))
                     .map((event, index) => (
@@ -580,8 +606,20 @@ function CalendarPage(){
                           handleEventClick(event, day);
                         }}
                         sx={{
-                          backgroundColor: event?.taks?.filter(task => new Date() > new Date(task.date) && !task.ready).length ? 'white': 'primary.main',
-                          color: event?.taks?.filter(task => new Date() > new Date(task.date) && !task.ready).length ? 'black': "primary.contrastText",
+                          backgroundColor:
+                            event?.tasks?.filter(
+                              (task) =>
+                                new Date() > new Date(task.date) && !task.ready
+                            ).length > 0
+                              ? 'white'
+                              : 'primary.main',
+                          color:
+                            event?.tasks?.filter(
+                              (task) =>
+                                new Date() > new Date(task.date) && !task.ready
+                            ).length > 0
+                              ? 'black'
+                              : 'primary.contrastText',
                           padding: 0.5,
                           marginBottom: 0.5,
                           borderRadius: 1,
@@ -589,9 +627,9 @@ function CalendarPage(){
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
-                          fontSize: "12px",
+                          fontSize: isMobile ? '10px' : '12px', // Ajuste para o tamanho da fonte em mobile
                           '&:hover': {
-                            opacity: 0.8
+                            opacity: 0.8,
                           },
                         }}
                       >
@@ -604,447 +642,642 @@ function CalendarPage(){
           </CalendarGrid>
         </CalendarContainer>
       </Grid>
-      <Grid item="true" xs={12} md={3}>
-        <StyledDrawer variant="persistent" anchor="right" open={drawerOpen}>
-            <DrawerHeader>
-                <Typography variant='h6' sx={{marginRight: 'auto'}}>
-                    {selectedDay && convertDate(selectedDay, 'dd MMMM, yyyy', { locale: ptBR })}
-                </Typography>
-                <IconButton style={{ width: 40 }} onClick={handleDrawerClose}>
-                <ChevronRight />
-                </IconButton>
-            </DrawerHeader>
-            <Divider />
-            {selectedEvent ? (
-                <Box p={2}>
-                    <Typography variant="h6">Tarefas - {selectedEvent.name}</Typography>
-                    <List dense>
-                        {selectedEvent.tasks.map((  task) => (
-                            <ListItem key={task.id}
-                                secondaryAction={
-                                  <>
-                                    <IconButton style={{ width: 40 }} edge="end" aria-label="update" onClick={(e) => {
-                                        setTaskFormData(task);
-                                        setTimeout(() => {
-                                          setIsTaskModalOpen(true);
-                                        }, 100);
-                                        setUpdate(true);
-                                      }}>
-                                        <UpdateRounded />
-                                    </IconButton>
-                                    <IconButton style={{ width: 40 }} edge="end" aria-label="delete" onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteTask(task.id);
-                                        setUpdate(true);
-                                      }}>
-                                        <Delete />
-                                    </IconButton>
-                                  </>
-                                }
-                            >
-                                <IconButton style={{ width: 40 }} onClick={() => {
-                                    dispatch(task_actions.TASKS_UPDATE_REQUEST({...task, ready: !task.ready}));
-                                    setUpdate(true);
-                                }}>
-                                    {task.ready ? <CheckCircleOutline /> : <RadioButtonUnchecked />}
-                                </IconButton>
-                                <ListItemText primary={task.name} secondary={task.desc} />
-                            </ListItem>
-                        ))}
-                    </List>
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                      <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<Add />}
-                          onClick={() => {
-                            setTaskFormData({
-                              name: '',
-                              desc: '',
-                              date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
-                              ready: false,
-                            });
+      <Grid item={"true"} xs={12} md={3}>
+        <StyledDrawer
+          variant={isMobile ? 'temporary' : 'persistent'} // Drawer temporário em mobile
+          anchor="right"
+          open={drawerOpen}
+          onClose={handleDrawerClose} // Adicionado para fechar o Drawer em mobile
+          ModalProps={{
+            keepMounted: true, // Melhor desempenho em mobile
+          }}
+        >
+          <DrawerHeader>
+            <Typography variant="h6" sx={{ marginRight: 'auto' }}>
+              {selectedDay &&
+                convertDate(selectedDay, 'dd MMMM, yyyy', { locale: ptBR })}
+            </Typography>
+            <IconButton style={{ width: 40 }} onClick={handleDrawerClose}>
+              <ChevronRight />
+            </IconButton>
+          </DrawerHeader>
+          <Divider />
+          {selectedEvent ? (
+            <Box p={2}>
+              <Typography variant="h6">
+                Tarefas - {selectedEvent.name}
+              </Typography>
+              <List dense>
+                {selectedEvent.tasks.map((task) => (
+                  <ListItem
+                    key={task.id}
+                    secondaryAction={
+                      <>
+                        <IconButton
+                          style={{ width: 40 }}
+                          edge="end"
+                          aria-label="update"
+                          onClick={(e) => {
+                            setTaskFormData(task);
                             setTimeout(() => {
                               setIsTaskModalOpen(true);
                             }, 100);
+                            setUpdate(true);
                           }}
-                      >
-                        Adicionar Tarefa
-                      </Button>
-                      <Button
-                          variant="contained"
-                          color="primary"
-                          startIcon={<ArrowLeft />}
-                          onClick={() => {
-                            handleDrawerOpen(selectedDay);
+                        >
+                          <UpdateRounded />
+                        </IconButton>
+                        <IconButton
+                          style={{ width: 40 }}
+                          edge="end"
+                          aria-label="delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteTask(task.id);
+                            setUpdate(true);
                           }}
-                          style={{marginLeft: 3}}
-                      >
-                        Voltar
-                      </Button>
-                    </Box>
-
-                    <Dialog open={isTaskModalOpen} onClose={() => {
-                      setIsTaskModalOpen(false);
-                    }}>
-                        <DialogTitle sx={{ color: theme.palette.text.third }}>{taskFormData.id ? 'Editar Tarefa' : 'Nova Tarefa'}</DialogTitle>
-                        <DialogContent>
-                            <TextFieldStyled
-                                autoFocus
-                                margin="dense"
-                                label="Nome da Tarefa"
-                                type="text"
-                                fullWidth
-                                variant="standard"
-                                value={taskFormData.name}
-                                onChange={(e) => handleTaskFormChange('name', e.target.value)}
-                                required
-                            />
-                            <TextFieldStyled
-                                margin="dense"
-                                label="Descrição"
-                                type="text"
-                                fullWidth
-                                variant="standard"
-                                value={taskFormData.desc}
-                                onChange={(e) => handleTaskFormChange('desc', e.target.value)}
-                                required
-                            />
-                            <TextFieldStyled
-                                margin="dense"
-                                label="Data"
-                                type="datetime-local"
-                                fullWidth
-                                variant="standard"
-                                value={taskFormData.date}
-                                onChange={(e) => handleTaskFormChange('date', e.target.value)}
-                                slotProps={{
-                                  inputLabel: {
-                                    shrink: "true",
-                                  }
-                                }}
-                                required
-                            />
-
-                            {taskFormData.id ? (
-                              <>
-                                  <AvatarsContainer>
-                                    <Typography variant="caption" style={{ color: theme.palette.text.third }}>Usuários relacionados</Typography>
-                                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        {Array.from(generics["TaskUser"] ?? new Set([])).map((item, index) => {
-                                          let user = users.find(usr => usr.id === item.values.user_id);
-                                          return (
-                                              <React.Fragment key={index}>
-                                                <Typography variant="caption" style={{ color: theme.palette.text.third, fontSize: "16px" }}>{user.name}</Typography>
-                                                <IconButton style={{ width: 40 }} onClick={() => {
-                                                  dispatch(generic_actions.GENERIC_DELETE_REQUEST({
-                                                    id: item.values.id,
-                                                    model: "TaskUser"
-                                                  }));
-                                                  setUpdate(true);
-                                                }}>
-                                                  <Delete></Delete>
-                                                </IconButton>
-                                              </React.Fragment>
-                                          );
-                                        })}
-                                    </div>
-                                  </AvatarsContainer>
-                                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row', width: '100%' }}>
-                                      <Autocomplete
-                                        options={users}
-                                        getOptionLabel={(option) => option?.name}
-                                        value={coworker}
-                                        onChange={(event, newValue) => {
-                                          setCoworker(newValue);
-                                        }}
-                                        renderInput={(params) => (
-                                          <TextFieldStyled
-                                            {...params}
-                                            label="Selecionar Usuário"
-                                            variant="standard"
-                                            margin="normal"
-                                            sx={{ minWidth: 250 }}
-                                          />
-                                        )}
-                                        slotProps={{
-                                          paper: {
-                                            style: {
-                                              color: theme.palette.text.third, // Cor do texto das opções
-                                            },
-                                          },
-                                          option: {
-                                            style: {
-                                              color: theme.palette.text.third, // Cor do texto das opções
-                                            },
-                                          },
-                                          clearIndicator: { // Estilos para o botão de limpar
-                                            style: {
-                                              color: theme.palette.text.third,
-                                              width: 40
-                                            }
-                                          },
-                                          popupIndicator: { // Estilos para o botão de dropdown
-                                            style: {
-                                              color: theme.palette.text.third,
-                                              width: 40 // Ajuste a largura conforme necessário
-                                            }
-                                          }
-                                        }}
-                                        sx={{
-                                          width: '100%'
-                                        }}
-                                      />
-                                    <IconButton style={{ width: 40, margin: 'auto' }} onClick={() => {
-                                      handleAddUserToTask();
-                                    }}>
-                                      <Add />
-                                    </IconButton>
-                                  </div>
-                              </>
-                            ): null }
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setIsTaskModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={(e) => {
-                              taskFormData.id ? handleEditTask(e) : handleCreateTask(e)
-                              setUpdate(true);
-                            }}>
-                                {taskFormData.id ? 'Salvar' : 'Adicionar'}
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-                </Box>
-            ) : (
-                <>
-                    <EventList>
-                        {eventsForSelectedDay.map((event) => (
-                            <ListItem
-                                key={event.id}  
-                                button={"true"}
-                                onClick={() => {
-                                    setSelectedEvent(event);
-                                }}
-                                secondaryAction={
-                                    <>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="duplicate" title='Duplicar' onClick={(e) => {
-                                          e.stopPropagation();
-                                          dispatch(event_actions.EVENTS_DUPLICATE_CREATE_REQUEST(event));
-                                          setTimeout(() => {
-                                            setUpdate(true);
-                                          }, 100);
-                                        }}>
-                                          <ControlPointDuplicate />
-                                      </IconButton>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="update" title='Editar' onClick={(e) => {
-                                          e.stopPropagation();
-                                          setEventFormData(event);
-                                          setTimeout(() => {
-                                            setIsEventModalOpen(true);
-                                          }, 100);
-                                          setUpdate(true);
-                                        }}>
-                                          <Update />
-                                      </IconButton>
-                                      <IconButton style={{ width: 40 }} edge="end" aria-label="delete" title='Apagar' onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleDeleteEvent(event.id);
-                                          setUpdate(true);
-                                        }}>
-                                          <Delete style={{ color: 'red' }} />
-                                      </IconButton>
-                                    </>
-                                }
-                            >
-                                <ListItemText
-                                    primary={event.name}
-                                    secondary={
-                                        <>
-                                            {convertDate(parseISO(event.date), "HH:mm", { locale: ptBR })}
-                                            {event.desc && ` - ${event.desc}`}
-                                        </>
-                                    }
-                                />
-                            </ListItem>
-                        ))}
-                    </EventList>
-
-                    <Dialog open={isEventModalOpen} onClose={() => {
-                      setIsEventModalOpen(false);
-                    }}>
-                        <DialogTitle sx={{ color: theme.palette.text.third }}>{eventFormData.id ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
-                        <DialogContent>
-                            {users.length ? (
-                              <div>
-                                <StyledAvatar alt="User Name" title={users.find(usr => usr.id === eventFormData.user_id)?.name} />
-                                <Typography style={{ color: theme.palette.text.third }}>{users.find(usr => usr.id === eventFormData.user_id)?.name}</Typography>
-                              </div>
-                            ): (
-                              <CircularProgress />
-                            )}
-                            <TextFieldStyled
-                                autoFocus
-                                margin="dense"
-                                label="Nome do Evento"
-                                type="text"
-                                fullWidth
-                                variant="standard"
-                                value={eventFormData.name}
-                                onChange={(e) => handleEventFormChange('name', e.target.value)}
-                                required
-                            />
-                            <TextFieldStyled
-                                margin="dense"
-                                label="Descrição"
-                                type="text"
-                                fullWidth
-                                variant="standard"
-                                value={eventFormData.desc}
-                                onChange={(e) => handleEventFormChange('desc', e.target.value)}
-                                required
-                            />
-                            <TextFieldStyled
-                                margin="dense"
-                                label="Data"
-                                type="datetime-local"
-                                fullWidth
-                                variant="standard"
-                                value={convertDate(new Date(eventFormData.date), "yyyy-MM-dd'T'HH:mm")}
-                                onChange={(e) => handleEventFormChange('date', e.target.value)}
-                                slotProps={{
-                                    input: {
-                                      shrink: "true",
-                                    }
-                                }}
-                                required
-                            />
-                            {eventFormData.id ? (
-                              <>
-                                  <AvatarsContainer>
-                                    <Typography variant="caption" style={{ color: theme.palette.text.third }}>Usuários relacionados</Typography>
-                                    <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
-                                        {Array.from(generics["EventUser"] ?? new Set([])).map((item, index) => {
-                                          let user = users.find(usr => usr.id === item.values.user_id);
-                                          return (
-                                              <React.Fragment key={index}>
-                                                <Typography variant="caption" style={{ color: theme.palette.text.third, fontSize: "16px" }}>{user.name}</Typography>
-                                                <IconButton style={{ width: 40 }} title='Deletar' onClick={() => {
-                                                  dispatch(generic_actions.GENERIC_DELETE_REQUEST({
-                                                    id: item.values.id,
-                                                    model: "EventUser"
-                                                  }));
-                                                  setUpdate(true);
-                                                }}>
-                                                  <Delete style={{ color: 'red' }}></Delete>
-                                                </IconButton>
-                                              </React.Fragment>
-                                          );
-                                        })}
-                                    </div>
-                                  </AvatarsContainer>
-                                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'row', width: '100%' }}>
-                                      <Autocomplete
-                                        options={users}
-                                        getOptionLabel={(option) => option?.name}
-                                        value={coworker}
-                                        onChange={(event, newValue) => {
-                                          setCoworker(newValue);
-                                        }}
-                                        renderInput={(params) => (
-                                          <TextFieldStyled
-                                            {...params}
-                                            label="Selecionar Usuário"
-                                            variant="standard"
-                                            margin="normal"
-                                            sx={{ minWidth: 250 }}
-                                          />
-                                        )}
-                                        slotProps={{
-                                          paper: {
-                                            style: {
-                                              color: theme.palette.text.third, // Cor do texto das opções
-                                            },
-                                          },
-                                          option: {
-                                            style: {
-                                              color: theme.palette.text.third, // Cor do texto das opções
-                                            },
-                                          },
-                                          clearIndicator: { // Estilos para o botão de limpar
-                                            style: {
-                                              color: theme.palette.text.third,
-                                              width: 40
-                                            }
-                                          },
-                                          popupIndicator: { // Estilos para o botão de dropdown
-                                            style: {
-                                              color: theme.palette.text.third,
-                                              width: 40 // Ajuste a largura conforme necessário
-                                            }
-                                          }
-                                        }}
-                                        sx={{
-                                          width: '100%'
-                                        }}
-                                      />
-                                    <IconButton style={{ width: 40, margin: 'auto' }} title='Adicionar' onClick={() => {
-                                      handleAddUserToEvent();
-                                    }}>
-                                      <Add />
-                                    </IconButton>
-                                  </div>
-                              </>
-                            ): null }
-                            <FormControlLabel
-                              name='private'
-                              control={
-                                  <Checkbox
-                                      checked={eventFormData.private ?? false}
-                                      onChange={(e) =>
-                                          handleEventFormChange('private', e.target.checked)
-                                      }
-                                  />
-                              }
-                              label="Particular?"
-                              style={{ color: theme.palette.text.third}}
-                            />
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={() => setIsEventModalOpen(false)}>Cancelar</Button>
-                            <Button onClick={(e) => {
-                              eventFormData.id ? handleEditEvent(e) : handleCreateEvent(e)
-                              setUpdate(true);
-                            }}>
-                                {eventFormData.id ? 'Salvar' : 'Adicionar'}
-                            </Button>
-                        </DialogActions>
-                    </Dialog>
-
-                    <StyledFab
-                      color="primary"
-                      aria-label="add"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </>
+                    }
+                  >
+                    <IconButton
+                      style={{ width: 40 }}
                       onClick={() => {
-                        setEventFormData({
-                          name: '',
-                          date: selectedDay
-                            ? convertDate(selectedDay, "yyyy-MM-dd'T'HH:mm")
-                            : convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
-                          desc: '',
-                          private: false,
-                        });
-                        setTimeout(() => {
-                          setIsEventModalOpen(true);
-                        }, 100);
+                        dispatch(
+                          task_actions.TASKS_UPDATE_REQUEST({
+                            ...task,
+                            ready: !task.ready,
+                          })
+                        );
+                        setUpdate(true);
                       }}
                     >
-                      <Add />
-                    </StyledFab>
+                      {task.ready ? (
+                        <CheckCircleOutline />
+                      ) : (
+                        <RadioButtonUnchecked />
+                      )}
+                    </IconButton>
+                    <ListItemText
+                      primary={task.name}
+                      secondary={task.desc}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setTaskFormData({
+                      name: '',
+                      desc: '',
+                      date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                      ready: false,
+                    });
+                    setTimeout(() => {
+                      setIsTaskModalOpen(true);
+                    }, 100);
+                  }}
+                >
+                  Adicionar Tarefa
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  startIcon={<ArrowLeft />}
+                  onClick={() => {
+                    handleDrawerOpen(selectedDay);
+                  }}
+                  style={{ marginLeft: 3 }}
+                >
+                  Voltar
+                </Button>
+              </Box>
+
+              <Dialog
+                open={isTaskModalOpen}
+                onClose={() => {
+                  setIsTaskModalOpen(false);
+                }}
+              >
+                <DialogTitle sx={{ color: theme.palette.text.third }}>
+                  {taskFormData.id ? 'Editar Tarefa' : 'Nova Tarefa'}
+                </DialogTitle>
+                <DialogContent>
+                  <TextFieldStyled
+                    autoFocus
+                    margin="dense"
+                    label="Nome da Tarefa"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    value={taskFormData.name}
+                    onChange={(e) =>
+                      handleTaskFormChange('name', e.target.value)
+                    }
+                    required
+                  />
+                  <TextFieldStyled
+                    margin="dense"
+                    label="Descrição"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    value={taskFormData.desc}
+                    onChange={(e) =>
+                      handleTaskFormChange('desc', e.target.value)
+                    }
+                    required
+                  />
+                  <TextFieldStyled
+                    margin="dense"
+                    label="Data"
+                    type="datetime-local"
+                    fullWidth
+                    variant="standard"
+                    value={taskFormData.date}
+                    onChange={(e) =>
+                      handleTaskFormChange('date', e.target.value)
+                    }
+                    slotProps={{
+                      inputLabel: {
+                        shrink: 'true',
+                      },
+                    }}
+                    required
+                  />
+
+                  {taskFormData.id ? (
+                    <>
+                      <AvatarsContainer>
+                        <Typography
+                          variant="caption"
+                          style={{ color: theme.palette.text.third }}
+                        >
+                          Usuários relacionados
+                        </Typography>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          {Array.from(
+                            generics['TaskUser'] ?? new Set([])
+                          ).map((item, index) => {
+                            let user = users.find(
+                              (usr) => usr.id === item.values.user_id
+                            );
+                            return (
+                              <React.Fragment key={index}>
+                                <Typography
+                                  variant="caption"
+                                  style={{
+                                    color: theme.palette.text.third,
+                                    fontSize: '16px',
+                                  }}
+                                >
+                                  {user.name}
+                                </Typography>
+                                <IconButton
+                                  style={{ width: 40 }}
+                                  onClick={() => {
+                                    dispatch(
+                                      generic_actions.GENERIC_DELETE_REQUEST({
+                                        id: item.values.id,
+                                        model: 'TaskUser',
+                                      })
+                                    );
+                                    setUpdate(true);
+                                  }}
+                                >
+                                  <Delete></Delete>
+                                </IconButton>
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      </AvatarsContainer>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          width: '100%',
+                        }}
+                      >
+                        <Autocomplete
+                          options={users}
+                          getOptionLabel={(option) => option?.name}
+                          value={coworker}
+                          onChange={(event, newValue) => {
+                            setCoworker(newValue);
+                          }}
+                          renderInput={(params) => (
+                            <TextFieldStyled
+                              {...params}
+                              label="Selecionar Usuário"
+                              variant="standard"
+                              margin="normal"
+                              sx={{ minWidth: 250 }}
+                            />
+                          )}
+                          slotProps={{
+                            paper: {
+                              style: {
+                                color: theme.palette.text.third, // Cor do texto das opções
+                              },
+                            },
+                            option: {
+                              style: {
+                                color: theme.palette.text.third, // Cor do texto das opções
+                              },
+                            },
+                            clearIndicator: {
+                              // Estilos para o botão de limpar
+                              style: {
+                                color: theme.palette.text.third,
+                                width: 40,
+                              },
+                            },
+                            popupIndicator: {
+                              // Estilos para o botão de dropdown
+                              style: {
+                                color: theme.palette.text.third,
+                                width: 40, // Ajuste a largura conforme necessário
+                              },
+                            },
+                          }}
+                          sx={{
+                            width: '100%',
+                          }}
+                        />
+                        <IconButton
+                          style={{ width: 40, margin: 'auto' }}
+                          onClick={() => {
+                            handleAddUserToTask();
+                          }}
+                        >
+                          <Add />
+                        </IconButton>
+                      </div>
                     </>
-            )}
+                  ) : null}
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setIsTaskModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      taskFormData.id
+                        ? handleEditTask(e)
+                        : handleCreateTask(e);
+                      setUpdate(true);
+                    }}
+                  >
+                    {taskFormData.id ? 'Salvar' : 'Adicionar'}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+            </Box>
+          ) : (
+            <>
+              <EventList>
+                {eventsForSelectedDay.map((event) => (
+                  <ListItem
+                    key={event.id}
+                    button
+                    onClick={() => {
+                      setSelectedEvent(event);
+                    }}
+                    secondaryAction={
+                      <>
+                        <IconButton
+                          style={{ width: 40 }}
+                          edge="end"
+                          aria-label="duplicate"
+                          title="Duplicar"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            dispatch(
+                              event_actions.EVENTS_DUPLICATE_CREATE_REQUEST(
+                                event
+                              )
+                            );
+                            setTimeout(() => {
+                              setUpdate(true);
+                            }, 100);
+                          }}
+                        >
+                          <ControlPointDuplicate />
+                        </IconButton>
+                        <IconButton
+                          style={{ width: 40 }}
+                          edge="end"
+                          aria-label="update"
+                          title="Editar"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEventFormData(event);
+                            setTimeout(() => {
+                              setIsEventModalOpen(true);
+                            }, 100);
+                            setUpdate(true);
+                          }}
+                        >
+                          <Update />
+                        </IconButton>
+                        <IconButton
+                          style={{ width: 40 }}
+                          edge="end"
+                          aria-label="delete"
+                          title="Apagar"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteEvent(event.id);
+                            setUpdate(true);
+                          }}
+                        >
+                          <Delete style={{ color: 'red' }} />
+                        </IconButton>
+                      </>
+                    }
+                  >
+                    <ListItemText
+                      primary={event.name}
+                      secondary={
+                        <>
+                          {convertDate(parseISO(event.date), 'HH:mm', {
+                            locale: ptBR,
+                          })}
+                          {event.desc && ` - ${event.desc}`}
+                        </>
+                      }
+                    />
+                  </ListItem>
+                ))}
+              </EventList>
+
+              <Dialog
+                open={isEventModalOpen}
+                onClose={() => {
+                  setIsEventModalOpen(false);
+                }}
+              >
+                <DialogTitle sx={{ color: theme.palette.text.third }}>
+                  {eventFormData.id ? 'Editar Evento' : 'Novo Evento'}
+                </DialogTitle>
+                <DialogContent>
+                  {users.length ? (
+                    <div>
+                      <StyledAvatar
+                        alt="User Name"
+                        title={
+                          users.find((usr) => usr.id === eventFormData.user_id)
+                            ?.name
+                        }
+                      />
+                      <Typography style={{ color: theme.palette.text.third }}>
+                        {
+                          users.find((usr) => usr.id === eventFormData.user_id)
+                            ?.name
+                        }
+                      </Typography>
+                    </div>
+                  ) : (
+                    <CircularProgress />
+                  )}
+                  <TextFieldStyled
+                    autoFocus
+                    margin="dense"
+                    label="Nome do Evento"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    value={eventFormData.name}
+                    onChange={(e) =>
+                      handleEventFormChange('name', e.target.value)
+                    }
+                    required
+                  />
+                  <TextFieldStyled
+                    margin="dense"
+                    label="Descrição"
+                    type="text"
+                    fullWidth
+                    variant="standard"
+                    value={eventFormData.desc}
+                    onChange={(e) =>
+                      handleEventFormChange('desc', e.target.value)
+                    }
+                    required
+                  />
+                  <TextFieldStyled
+                    margin="dense"
+                    label="Data"
+                    type="datetime-local"
+                    fullWidth
+                    variant="standard"
+                    value={convertDate(
+                      new Date(eventFormData.date),
+                      "yyyy-MM-dd'T'HH:mm"
+                    )}
+                    onChange={(e) =>
+                      handleEventFormChange('date', e.target.value)
+                    }
+                    slotProps={{
+                      input: {
+                        shrink: 'true',
+                      },
+                    }}
+                    required
+                  />
+                  {eventFormData.id ? (
+                    <>
+                      <AvatarsContainer>
+                        <Typography
+                          variant="caption"
+                          style={{ color: theme.palette.text.third }}
+                        >
+                          Usuários relacionados
+                        </Typography>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          {Array.from(
+                            generics['EventUser'] ?? new Set([])
+                          ).map((item, index) => {
+                            let user = users.find(
+                              (usr) => usr.id === item.values.user_id
+                            );
+                            return (
+                              <React.Fragment key={index}>
+                                <Typography
+                                  variant="caption"
+                                  style={{
+                                    color: theme.palette.text.third,
+                                    fontSize: '16px',
+                                  }}
+                                >
+                                  {user.name}
+                                </Typography>
+                                <IconButton
+                                  style={{ width: 40 }}
+                                  title="Deletar"
+                                  onClick={() => {
+                                    dispatch(
+                                      generic_actions.GENERIC_DELETE_REQUEST({
+                                        id: item.values.id,
+                                        model: 'EventUser',
+                                      })
+                                    );
+                                    setUpdate(true);
+                                  }}
+                                >
+                                  <Delete style={{ color: 'red' }} />
+                                </IconButton>
+                              </React.Fragment>
+                            );
+                          })}
+                        </div>
+                      </AvatarsContainer>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          width: '100%',
+                        }}
+                      >
+                        <Autocomplete
+                          options={users}
+                          getOptionLabel={(option) => option?.name}
+                          value={coworker}
+                          onChange={(event, newValue) => {
+                            setCoworker(newValue);
+                          }}
+                          renderInput={(params) => (
+                            <TextFieldStyled
+                              {...params}
+                              label="Selecionar Usuário"
+                              variant="standard"
+                              margin="normal"
+                              sx={{ minWidth: 250 }}
+                            />
+                          )}
+                          slotProps={{
+                            paper: {
+                              style: {
+                                color: theme.palette.text.third,
+                              },
+                            },
+                            option: {
+                              style: {
+                                color: theme.palette.text.third,
+                              },
+                            },
+                            clearIndicator: {
+                              style: {
+                                color: theme.palette.text.third,
+                                width: 40,
+                              },
+                            },
+                            popupIndicator: {
+                              style: {
+                                color: theme.palette.text.third,
+                                width: 40,
+                              },
+                            },
+                          }}
+                          sx={{
+                            width: '100%',
+                          }}
+                        />
+                        <IconButton
+                          style={{ width: 40, margin: 'auto' }}
+                          title="Adicionar"
+                          onClick={() => {
+                            handleAddUserToEvent();
+                          }}
+                        >
+                          <Add />
+                        </IconButton>
+                      </div>
+                    </>
+                  ) : null}
+                  <FormControlLabel
+                    name="private"
+                    control={
+                      <Checkbox
+                        checked={eventFormData.private ?? false}
+                        onChange={(e) =>
+                          handleEventFormChange('private', e.target.checked)
+                        }
+                      />
+                    }
+                    label="Particular?"
+                    style={{ color: theme.palette.text.third }}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setIsEventModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={(e) => {
+                      eventFormData.id
+                        ? handleEditEvent(e)
+                        : handleCreateEvent(e);
+                      setUpdate(true);
+                    }}
+                  >
+                    {eventFormData.id ? 'Salvar' : 'Adicionar'}
+                  </Button>
+                </DialogActions>
+              </Dialog>
+
+              <StyledFab
+                color="primary"
+                aria-label="add"
+                onClick={() => {
+                  setEventFormData({
+                    name: '',
+                    date: selectedDay
+                      ? convertDate(selectedDay, "yyyy-MM-dd'T'HH:mm")
+                      : convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                    desc: '',
+                    private: false,
+                  });
+                  setTimeout(() => {
+                    setIsEventModalOpen(true);
+                  }, 100);
+                }}
+              >
+                <Add />
+              </StyledFab>
+            </>
+          )}
         </StyledDrawer>
       </Grid>
     </Grid>
   );
-};
+}
 
 export default CalendarPage;

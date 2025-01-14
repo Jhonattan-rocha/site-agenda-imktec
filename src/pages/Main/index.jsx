@@ -15,7 +15,8 @@ import {
   Grid2 as Grid,
   Box,
   TextField,
-  CircularProgress
+  CircularProgress,
+  Drawer,
 } from '@mui/material';
 import {
   AccountCircle,
@@ -26,8 +27,9 @@ import {
   ArrowRight,
   CalendarMonth,
 } from '@mui/icons-material';
-import { padding, styled } from '@mui/system';
-import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom'; // Importe as dependências necessárias
+import { styled } from '@mui/system';
+import MenuIcon from '@mui/icons-material/Menu';
+import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom';
 import Login from '../Login';
 import CalendarPage from '../Calendar';
 import { useDispatch, useSelector } from 'react-redux';
@@ -39,9 +41,9 @@ import * as auth_actions from '../../store/modules/authReducer/actions';
 import * as generic_actions from '../../store/modules/genericReducer/actions';
 import hasPermission from '../../services/has_permission';
 
-// Estilos personalizados (mantidos do exemplo anterior)
-const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
-  width: expanded === "true" ? 250 : 64,
+// Estilos personalizados
+const StyledAppBar = styled(AppBar)(({ theme, expanded, isMobile }) => ({
+  width: isMobile === "true" ? '100%' : expanded === "true" ? 250 : 64,
   transition: theme.transitions.create(['width', 'margin'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
@@ -50,15 +52,16 @@ const StyledAppBar = styled(AppBar)(({ theme, expanded }) => ({
   boxShadow: theme.shadows[2],
   zIndex: theme.zIndex.drawer + 1,
   left: 0,
-  height: '100%',
+  height: isMobile === "true" ? 'auto' : '100%', // Altura automática em dispositivos móveis
 }));
 
-const StyledToolbar = styled(Toolbar)(({ theme }) => ({
+const StyledToolbar = styled(Toolbar)(({ theme, isMobile }) => ({
   display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
+  flexDirection: isMobile === "true" ? 'row' : 'column', // Linha em dispositivos móveis, coluna em desktop
+  alignItems: isMobile === "true" ? "flex-end":'center',
   padding: theme.spacing(2),
   minHeight: '64px !important',
+  justifyContent: isMobile === "true" ? 'space-between' : 'center', // Espaço entre os itens em dispositivos móveis
 }));
 
 const StyledAvatar = styled(Avatar)(({ theme }) => ({
@@ -79,17 +82,17 @@ const MenuItem = styled(ListItem)(({ theme, expanded }) => ({
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
   },
-  // Estilos para o link dentro do MenuItem
   '& .MuiTypography-root': {
-      fontSize: '0.9rem',
+    fontSize: '0.9rem',
   },
   '& a': {
-    textDecoration: 'none', // Remove o sublinhado
-    color: 'inherit', // Herda a cor do pai (ListItem)
-    width: '100%', // Ocupa toda a largura disponível
-    display: 'flex', // Para alinhar ícone e texto
-    alignItems: 'center', // Alinha verticalmente ao centro
-  }
+    textDecoration: 'none',
+    color: 'inherit',
+    width: '100%',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  textAlign: 'center'
 }));
 
 const MenuItemIcon = styled(ListItemIcon)(({ theme, expanded }) => ({
@@ -108,24 +111,25 @@ const AppContainer = styled(Grid)(({ theme }) => ({
   height: '100vh',
   width: '100vw',
   backgroundColor: theme.palette.background.default,
+  overflowX: 'hidden' // Evitar barra de rolagem horizontal
 }));
 
-const Content = styled(Box)(({ theme, expanded }) => ({
+const Content = styled(Box)(({ theme, expanded, isMobile }) => ({
   flexGrow: 1,
   padding: theme.spacing(3),
   transition: theme.transitions.create('margin', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: expanded === "true" ? 250 : 64,
-  marginTop: 64,
+  marginLeft: isMobile === "true" ? 0 : expanded === "true" ? 250 : 64, // Sem margem esquerda em dispositivos móveis
+  marginTop: isMobile === "true" ? 56 : 64, // Margem superior ajustada para dispositivos móveis
   backgroundColor: theme.palette.background.default,
 }));
 
 const NotificationsPopover = styled(Popover)(({ theme }) => ({
   '& .MuiPopover-paper': {
     width: 380,
-    maxHeight: 400, // Aumentei a altura máxima
+    maxHeight: 400,
     overflow: 'auto',
   },
 }));
@@ -156,17 +160,17 @@ const NotificationText = styled(ListItemText)(({ theme }) => ({
 
 const SearchInput = styled(TextField)(({ theme }) => ({
   '& .MuiInput-root': {
-    color: theme.palette.text.third, // Cor do texto digitado
+    color: theme.palette.text.third,
     borderColor: theme.palette.primary.contrastText,
     padding: theme.spacing(2),
     '&:before': {
-      borderColor: theme.palette.primary.contrastText, // Cor da linha antes de focar
+      borderColor: theme.palette.primary.contrastText,
     },
     '&:hover:not(.Mui-disabled):before': {
-      borderColor: theme.palette.primary.main, // Cor da linha no hover
+      borderColor: theme.palette.primary.main,
     },
     '&:after': {
-      borderColor: theme.palette.primary.main, // Cor da linha ao focar
+      borderColor: theme.palette.primary.main,
     },
   },
   '& .MuiInputLabel-root': {
@@ -186,6 +190,17 @@ const LoadingMore = styled('div')(({ theme }) => ({
   padding: theme.spacing(1),
 }));
 
+const StyledDrawer = styled(Drawer)(({ theme }) => ({
+  width: 250,
+  flexShrink: 0,
+  '& .MuiDrawer-paper': {
+    width: 250,
+    boxSizing: 'border-box',
+    backgroundColor: theme.palette.secondary.main, // Cor de fundo do menu
+    color: theme.palette.text.primary, // Cor do texto do menu
+  },
+}));
+
 function Home() {
   const user = useSelector((state) => state.authreducer);
   const generics = useSelector((state) => state.genericreducer?.generics);
@@ -200,9 +215,15 @@ function Home() {
   const [hasMore, setHasMore] = useState(true);
   const [skip, setSkip] = useState(0);
   const observer = useRef();
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleToggleSidebar = () => {
-    setExpanded(!expanded);
+    if (!isMobile) {
+      setExpanded(!expanded);
+    } else {
+      setIsDrawerOpen(!isDrawerOpen);
+    }
   };
 
   const handleOpenUserMenu = (event) => {
@@ -258,7 +279,7 @@ function Home() {
     const fetchData = async () => {
       if (anchorElNotifications && hasMore) {
         setIsLoading(true);
-        await dispatch(
+        dispatch(
           generic_actions.GENERICS_REQUEST({
             skip: skip,
             limit: 10,
@@ -291,227 +312,333 @@ function Home() {
     }
   }, [generics]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 600);
+      if(window.innerWidth < 600){
+        setIsDrawerOpen(false);
+        setExpanded(false);
+      }
+      if (window.innerWidth >= 600) {
+        setIsDrawerOpen(false); // Fechar a drawer se a tela voltar a ser maior que 600px
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
   return (
     <AppContainer container={true}>
       {!user.isLoggedIn ? null : (
-        <StyledAppBar
-          position="fixed"
-          expanded={(() => (expanded ? 'true' : 'false'))()}
-        >
-          <StyledToolbar>
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              onClick={handleToggleSidebar}
-              edge="start"
-              sx={{ alignSelf: 'flex-end', width: 40, marginBottom: 2 }}
-            >
-              {expanded ? <ArrowLeft /> : <ArrowRight />}
-            </IconButton>
-            <StyledAvatar alt="User Name" />
-            {expanded && (
+        <>
+          {/* Drawer (Menu Lateral para Mobile) */}
+          <StyledDrawer
+            variant="temporary"
+            open={isDrawerOpen}
+            onClose={handleToggleSidebar}
+            ModalProps={{
+              keepMounted: true, // Melhor desempenho em mobile
+            }}
+          >
+            <StyledToolbar ismobile={isMobile.toString()}>
+              <IconButton
+                color="inherit"
+                aria-label="close drawer"
+                onClick={handleToggleSidebar}
+                edge="start"
+                sx={{ alignSelf: 'flex-end', width: 40, marginBottom: 2 }}
+              >
+                <ArrowLeft />
+              </IconButton>
+              <StyledAvatar alt="User Name" />
               <Typography variant="h6" noWrap color="text.primary">
                 {user.user.name}
               </Typography>
-            )}
+            </StyledToolbar>
 
-            <Grid
-              container
-              justifyContent="center"
-              spacing={1}
-              sx={{ mt: 2, mb: 2 }}
-            >
-              <Grid item={"true"}>
-                <Tooltip title="Open user menu" arrow>
-                  <IconButton
-                    onClick={handleOpenUserMenu}
-                    sx={{ p: 0, width: 40 }}
-                  >
-                    <AccountCircle color="primary" fontSize="large" />
-                  </IconButton>
-                </Tooltip>
-                <Popover
-                  open={Boolean(anchorElUser)}
-                  anchorEl={anchorElUser}
-                  onClose={handleCloseUserMenu}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                  }}
-                >
-                  <List>
-                    <ListItem
-                      button={"true"}
-                      onClick={handleCloseUserMenu}
-                      disableripple={"true"}
-                    >
-                      <ListItemIcon>
-                        <Settings color="primary" />
-                      </ListItemIcon>
-                      <ListItemText
-                        style={{ color: 'black' }}
-                        primary="Settings"
-                      />
-                    </ListItem>
-                    <ListItem
-                      button={"true"}
-                      onClick={() => {
-                        handleCloseUserMenu();
-                        dispatch(auth_actions.Loguot());
-                      }}
-                      disableripple={"true"}
-                    >
-                      <ListItemIcon>
-                        <ExitToApp color="primary" />
-                      </ListItemIcon>
-                      <ListItemText
-                        style={{ color: 'black' }}
-                        primary="Logout"
-                      />
-                    </ListItem>
-                  </List>
-                </Popover>
-              </Grid>
-              <Grid item={"true"}>
-                <Tooltip title="Notifications" arrow>
-                  <IconButton
-                    onClick={handleOpenNotifications}
-                    sx={{ p: 0, width: 40 }}
-                  >
-                    <Notifications color="primary" fontSize="large" />
-                  </IconButton>
-                </Tooltip>
-                <NotificationsPopover
-                  open={Boolean(anchorElNotifications)}
-                  anchorEl={anchorElNotifications}
-                  onClose={handleCloseNotifications}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'center',
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'center',
-                  }}
-                >
-                  <SearchInput
-                    placeholder="Pesquisar notificações..."
-                    value={searchText}
-                    onChange={handleSearchChange}
-                    fullWidth
-                    variant="standard"
-                  />
-                  <NotificationsList>
-                    {notifications.map((notification, index) => {
-                      if (notifications.length === index + 1) {
-                        return (
-                          <NotificationItem
-                            ref={lastNotificationRef}
-                            key={notification.id}
-                          >
-                            <NotificationText
-                              primary={notification.message}
-                              secondary={new Date(
-                                notification.date
-                              ).toLocaleString()}
-                            />
-                          </NotificationItem>
-                        );
-                      } else {
-                        return (
-                          <NotificationItem key={notification.id}>
-                            <NotificationText
-                              primary={notification.message}
-                              secondary={new Date(
-                                notification.date
-                              ).toLocaleString()}
-                            />
-                          </NotificationItem>
-                        );
-                      }
-                    })}
-                    {isLoading && (
-                      <LoadingMore>
-                        <CircularProgress size={24} />
-                      </LoadingMore>
-                    )}
-                    {!isLoading && notifications.length === 0 && (
-                      <NotificationItem>
-                        <NotificationText primary="Nenhuma notificação encontrada." />
-                      </NotificationItem>
-                    )}
-                  </NotificationsList>
-                </NotificationsPopover>
-              </Grid>
-            </Grid>
-
-            <Divider
-              sx={{ my: 2, width: '80%', borderColor: 'rgba(255,255,255,0.2)' }}
-            />
-
+            {/* Conteúdo do Drawer (MenuOptions) */}
             <MenuOptions>
               <MenuItem
                 button={"true"}
-                expanded={(() => (expanded ? 'true' : 'false'))()}
+                expanded="true"
                 component={RouterLink}
                 to="/calendar"
                 disableripple={"true"}
+                onClick={handleToggleSidebar} // Fechar o menu ao clicar
               >
-                <MenuItemIcon expanded={(() => (expanded ? 'true' : 'false'))()}>
+                <MenuItemIcon expanded="true">
                   <CalendarMonth />
                 </MenuItemIcon>
-                {expanded && <MenuItemText primary="Calendario" />}
+                <MenuItemText primary="Calendario" />
               </MenuItem>
               {hasPermission(user.user.profile, 'Usuários', 'can_view') ? (
                 <MenuItem
                   button={"true"}
-                  expanded={(() => (expanded ? 'true' : 'false'))()}
+                  expanded="true"
                   component={RouterLink}
                   to="/users"
                   disableripple={"true"}
+                  onClick={handleToggleSidebar}
                 >
-                  <MenuItemIcon
-                    expanded={(() => (expanded ? 'true' : 'false'))()}
-                  >
+                  <MenuItemIcon expanded="true">
                     <FaUser />
                   </MenuItemIcon>
-                  {expanded && <MenuItemText primary="Usuários" />}
+                  <MenuItemText primary="Usuários" />
                 </MenuItem>
               ) : null}
               {hasPermission(user.user.profile, 'perfís', 'can_view') ? (
                 <MenuItem
-                  button={"true"}
-                  expanded={(() => (expanded ? 'true' : 'false'))()}
+                  button="true"
+                  expanded="true"
                   component={RouterLink}
                   to="/profiles"
                   disableripple={"true"}
+                  onClick={handleToggleSidebar}
                 >
-                  <MenuItemIcon
-                    expanded={(() => (expanded ? 'true' : 'false'))()}
-                  >
+                  <MenuItemIcon expanded="true">
                     <AiFillProfile />
                   </MenuItemIcon>
-                  {expanded && <MenuItemText primary="Perfís" />}
+                  <MenuItemText primary="Perfís" />
                 </MenuItem>
               ) : null}
             </MenuOptions>
-          </StyledToolbar>
-        </StyledAppBar>
+          </StyledDrawer>
+
+          {/* AppBar (Principalmente para Desktop) */}
+          <StyledAppBar
+            position="fixed"
+            expanded={expanded.toString()}
+            ismobile={isMobile.toString()}
+          >
+            <StyledToolbar ismobile={isMobile.toString()}>
+              {/* Botão do Menu Hamburguer para Mobile */}
+              {isMobile && (
+                <IconButton
+                  color="inherit"
+                  aria-label="open drawer"
+                  onClick={handleToggleSidebar}
+                  edge="start"
+                  sx={{ marginRight: 2, width: 40, margin: 'auto', alignSelf: 'center' }}
+                >
+                  <MenuIcon />
+                </IconButton>
+              )}
+
+              {/* Estrutura para Desktop */}
+              {!isMobile && (
+                <>
+                  <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    onClick={handleToggleSidebar}
+                    edge="start"
+                    sx={{ alignSelf: 'flex-end', width: 40, marginBottom: 1 }}
+                  >
+                    {expanded ? <ArrowLeft /> : <ArrowRight />}
+                  </IconButton>
+                  <StyledAvatar alt="User Name" />
+                  {expanded && (
+                    <Typography variant="h6" noWrap color="text.primary">
+                      {user.user.name}
+                    </Typography>
+                  )}
+                </>
+              )}
+
+              <Grid
+                container
+                justifyContent={isMobile ? 'flex-end' : 'center'}
+                spacing={1}
+                sx={{ mt: isMobile ? 0 : 2, mb: isMobile ? 0 : 2, flexGrow: 1 }}
+              >
+                <Grid item={"true"}>
+                  <Tooltip title="Open user menu" arrow>
+                    <IconButton
+                      onClick={handleOpenUserMenu}
+                      sx={{ p: 0, width: 40 }}
+                    >
+                      <AccountCircle color="primary" fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                  <Popover
+                    open={Boolean(anchorElUser)}
+                    anchorEl={anchorElUser}
+                    onClose={handleCloseUserMenu}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'center',
+                    }}
+                  >
+                    <List>
+                      <ListItem button onClick={handleCloseUserMenu} disableripple={"true"}>
+                        <ListItemIcon>
+                          <Settings color="primary" />
+                        </ListItemIcon>
+                        <ListItemText style={{ color: 'black' }} primary="Settings" />
+                      </ListItem>
+                      <ListItem
+                        button="true"
+                        onClick={() => {
+                          handleCloseUserMenu();
+                          dispatch(auth_actions.Loguot());
+                        }}
+                        disableripple={"true"}
+                      >
+                        <ListItemIcon>
+                          <ExitToApp color="primary" />
+                        </ListItemIcon>
+                        <ListItemText style={{ color: 'black' }} primary="Logout" />
+                      </ListItem>
+                    </List>
+                  </Popover>
+                </Grid>
+                <Grid item={"true"}>
+                  <Tooltip title="Notifications" arrow>
+                    <IconButton
+                      onClick={handleOpenNotifications}
+                      sx={{ p: 0, width: 40 }}
+                    >
+                      <Notifications color="primary" fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                  <NotificationsPopover
+                    open={Boolean(anchorElNotifications)}
+                    anchorEl={anchorElNotifications}
+                    onClose={handleCloseNotifications}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'center',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'center',
+                    }}
+                  >
+                    <SearchInput
+                      placeholder="Pesquisar notificações..."
+                      value={searchText}
+                      onChange={handleSearchChange}
+                      fullWidth
+                      variant="standard"
+                    />
+                    <NotificationsList>
+                      {notifications.map((notification, index) => {
+                        if (notifications.length === index + 1) {
+                          return (
+                            <NotificationItem
+                              ref={lastNotificationRef}
+                              key={notification.id}
+                            >
+                              <NotificationText
+                                primary={notification.message}
+                                secondary={new Date(
+                                  notification.date
+                                ).toLocaleString()}
+                              />
+                            </NotificationItem>
+                          );
+                        } else {
+                          return (
+                            <NotificationItem key={notification.id}>
+                              <NotificationText
+                                primary={notification.message}
+                                secondary={new Date(
+                                  notification.date
+                                ).toLocaleString()}
+                              />
+                            </NotificationItem>
+                          );
+                        }
+                      })}
+                      {isLoading && (
+                        <LoadingMore>
+                          <CircularProgress size={24} />
+                        </LoadingMore>
+                      )}
+                      {!isLoading && notifications.length === 0 && (
+                        <NotificationItem>
+                          <NotificationText primary="Nenhuma notificação encontrada." />
+                        </NotificationItem>
+                      )}
+                    </NotificationsList>
+                  </NotificationsPopover>
+                </Grid>
+              </Grid>
+
+              {/* Condicional para o Divider e MenuOptions */}
+              {!isMobile && (
+                <>
+                  <Divider
+                    sx={{
+                      my: 2,
+                      width: '80%',
+                      borderColor: 'rgba(255,255,255,0.2)',
+                    }}
+                  />
+                  <MenuOptions>
+                    <MenuItem
+                      button="true"
+                      expanded={expanded.toString()}
+                      component={RouterLink}
+                      to="/calendar"
+                      disableripple={"true"}
+                    >
+                      <MenuItemIcon expanded={expanded.toString()}>
+                        <CalendarMonth />
+                      </MenuItemIcon>
+                      {expanded && <MenuItemText primary="Calendario" />}
+                    </MenuItem>
+                    {hasPermission(user.user.profile, 'Usuários', 'can_view') && (
+                      <MenuItem
+                        button="true"
+                        expanded={expanded.toString()}
+                        component={RouterLink}
+                        to="/users"
+                        disableripple={"true"}
+                      >
+                        <MenuItemIcon expanded={expanded.toString()}>
+                          <FaUser />
+                        </MenuItemIcon>
+                        {expanded && <MenuItemText primary="Usuários" />}
+                      </MenuItem>
+                    )}
+                    {hasPermission(user.user.profile, 'perfís', 'can_view') && (
+                      <MenuItem
+                        button="true"
+                        expanded={expanded.toString()}
+                        component={RouterLink}
+                        to="/profiles"
+                        disableripple={"true"}
+                      >
+                        <MenuItemIcon expanded={expanded.toString()}>
+                          <AiFillProfile />
+                        </MenuItemIcon>
+                        {expanded && <MenuItemText primary="Perfís" />}
+                      </MenuItem>
+                    )}
+                  </MenuOptions>
+                </>
+              )}
+            </StyledToolbar>
+          </StyledAppBar>
+        </>
       )}
-      <Content expanded={(() => (expanded ? 'true' : 'false'))()}>
+
+      <Content expanded={expanded.toString()} ismobile={isMobile.toString()}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/calendar" element={<CalendarPage />} />
-          {hasPermission(user.user.profile, 'Usuários', 'can_view') ? (
+          {hasPermission(user.user.profile, 'Usuários', 'can_view') && (
             <Route path="/users" element={<UsersPage />} />
-          ) : null}
-          {hasPermission(user.user.profile, 'perfís', 'can_view') ? (
+          )}
+          {hasPermission(user.user.profile, 'perfís', 'can_view') && (
             <Route path="/profiles" element={<ProfilesPage />} />
-          ) : null}
+          )}
         </Routes>
       </Content>
     </AppContainer>

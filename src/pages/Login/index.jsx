@@ -25,6 +25,8 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.secondary.main, // Cor de fundo do seu tema
   color: theme.palette.primary.contrastText, // Cor do texto do seu tema
   borderRadius: theme.shape.borderRadius,
+  minWidth: 300,
+  alignSelf: 'flex-tart'
 }));
 
 // Componente estilizado para o TextField
@@ -103,9 +105,10 @@ function Login() {
       maxWidth="sm"
       sx={{
         display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start',
+        flexDirection: 'column',
+        minHeight: '100%',
         backgroundColor: 'background.default'
       }}
     >
@@ -123,12 +126,14 @@ function Login() {
             fullWidth
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <FaUser />
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <FaUser />
+                  </InputAdornment>
+                ),
+              }
             }}
           />
           <StyledTextField
@@ -139,29 +144,31 @@ function Login() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={handleKeyDown}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <MdPassword />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    style={{ width: 40 }}
-                    onClick={() =>
-                      setType(type === 'password' ? 'text' : 'password')
-                    }
-                    edge="end"
-                  >
-                    {type === 'password' ? (
-                      <AiOutlineEye />
-                    ) : (
-                      <AiOutlineEyeInvisible />
-                    )}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MdPassword />
+                  </InputAdornment>
+                ),
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      style={{ width: 40 }}
+                      onClick={() =>
+                        setType(type === 'password' ? 'text' : 'password')
+                      }
+                      edge="end"
+                    >
+                      {type === 'password' ? (
+                        <AiOutlineEye />
+                      ) : (
+                        <AiOutlineEyeInvisible />
+                      )}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }
             }}
           />
           <Typography align="center" sx={{ cursor: 'pointer', textDecoration: 'underline', mt: 1, color: 'text.secondary' }}>
