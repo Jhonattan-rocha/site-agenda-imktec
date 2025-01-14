@@ -26,7 +26,7 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   color: theme.palette.primary.contrastText, // Cor do texto do seu tema
   borderRadius: theme.shape.borderRadius,
   minWidth: 300,
-  alignSelf: 'flex-tart'
+  alignSelf: 'flex-tart',
 }));
 
 // Componente estilizado para o TextField
@@ -109,7 +109,7 @@ function Login() {
         alignItems: 'flex-start',
         flexDirection: 'column',
         minHeight: '100%',
-        backgroundColor: 'background.default'
+        backgroundColor: 'background.default',
       }}
     >
       <StyledPaper elevation={6}>

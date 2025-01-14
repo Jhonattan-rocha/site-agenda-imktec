@@ -165,15 +165,15 @@ function UsersPage() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 600); // Define isMobile como true se a largura da tela for menor que 768px (você pode ajustar esse valor)
+      setIsMobile(window.innerWidth < 600); 
       
       if (window.innerWidth >= 600) {
-        setIsMobile(false); // Fechar a drawer se a tela voltar a ser maior que 600px
+        setIsMobile(false);
       }
     };
   
     window.addEventListener('resize', handleResize);
-    handleResize(); // Verifica o tamanho da tela ao carregar o componente
+    handleResize(); 
   
     return () => window.removeEventListener('resize', handleResize);
   }, []);

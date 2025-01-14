@@ -116,13 +116,13 @@ const AppContainer = styled(Grid)(({ theme }) => ({
 
 const Content = styled(Box)(({ theme, expanded, isMobile }) => ({
   flexGrow: 1,
-  padding: theme.spacing(3),
+  padding: isMobile === "true" ? theme.spacing(1.5) : theme.spacing(3),
   transition: theme.transitions.create('margin', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: isMobile === "true" ? 0 : expanded === "true" ? 250 : 64, // Sem margem esquerda em dispositivos móveis
-  marginTop: isMobile === "true" ? 56 : 64, // Margem superior ajustada para dispositivos móveis
+  marginLeft: isMobile === "true" ? 0 : expanded === "true" ? 250 : 20, // Sem margem esquerda em dispositivos móveis
+  marginTop: isMobile === "true" ? 56 : isMobile === "true" ? 0 : 20, // Margem superior ajustada para dispositivos móveis
   backgroundColor: theme.palette.background.default,
 }));
 
@@ -204,7 +204,7 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
 function Home() {
   const user = useSelector((state) => state.authreducer);
   const generics = useSelector((state) => state.genericreducer?.generics);
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState(null);
   const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const navigate = useNavigate();

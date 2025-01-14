@@ -64,6 +64,10 @@ import * as generic_actions from '../../store/modules/genericReducer/actions';
 import GenericSearch from '../../services/indivialStateSearch';
 import ConfirmationDialog from '../../GlobalComponents/confirmDialog';
 
+// Estilos para a Barra Lateral
+const drawerWidth = 300;
+const countCols = 7;
+
 // Estilos para o Calendário
 const CalendarContainer = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -80,6 +84,7 @@ const CalendarHeader = styled('div')(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   color: theme.palette.text.third,
   borderBottom: `1px solid ${theme.palette.divider}`,
+  marginLeft: 25
 }));
 
 // Estilos
@@ -105,7 +110,7 @@ const CalendarDay = styled('div')(({ theme, isCurrentMonth, isToday, isMobile })
   justifyContent: 'flex-start',
   alignItems: 'flex-start',
   overflow: 'hidden',
-  height: isMobile ? '50px' : 'auto', // Ajuste para a altura em mobile
+  height: isMobile === "true" ? '50px' : 'auto', // Ajuste para a altura em mobile
 }));
 
 const CalendarDayLabel = styled('span')(({ theme, isMobile }) => ({
@@ -114,20 +119,22 @@ const CalendarDayLabel = styled('span')(({ theme, isMobile }) => ({
   width: '100%',
   display: 'flex',
   justifyContent: 'center',
-  fontSize: isMobile ? '12px' : 'inherit', // Ajuste para o tamanho da fonte em mobile
+  fontSize: isMobile === "true" ? '12px' : 'inherit', // Ajuste para o tamanho da fonte em mobile
 }));
 
 const CalendarGrid = styled('div')(({ theme, view, isMobile }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(7, 1fr)',
-  gridTemplateRows: view === 'month' ? isMobile ? 'repeat(6, 50px)' : 'repeat(6, 1fr)' : isMobile ? 'repeat(1, 50px)': 'repeat(1, 1fr)', // Ajuste para a altura das linhas em mobile
+  gridTemplateColumns: `repeat(${isMobile === "true" ? countCols - 3 : countCols}, 1fr)`,
+  gridTemplateRows: view === 'month' ? isMobile === "true" ? 'repeat(9, 50px)' : 'repeat(6, 1fr)' : isMobile === "true" ? 'repeat(1, 50px)': 'repeat(1, 1fr)', // Ajuste para a altura das linhas em mobile
   gap: theme.spacing(0),
   padding: theme.spacing(2),
   flexGrow: 1,
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: '4px',
-  overflow: 'hidden',
+  overflow: isMobile === "true" ? 'scroll' : 'hidden',
+  overflowX: 'hidden',
   height: '75vh',
+  marginLeft: 10
 }));
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
@@ -145,9 +152,6 @@ const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
     },
   },
 }));
-
-// Estilos para a Barra Lateral
-const drawerWidth = 350;
 
 const StyledDrawer = styled(Drawer)(({ theme }) => ({
   width: drawerWidth,
@@ -422,7 +426,7 @@ function CalendarPage(){
       let date_aux = endOfMonth(currentDate);
       return eachDayOfInterval({
         start: startOfMonth(currentDate),
-        end: date_aux.setDate(date_aux.getDate() === 31 ? date_aux.getDate() + 4 : date_aux.getDate() === 30 ? date_aux.getDate() + 5 : date_aux.getDate() + 7),
+        end: date_aux.setDate(date_aux.getDate() + (countCols - (date_aux.getDate() % countCols))),
       });
     } else {
       return eachDayOfInterval({
@@ -513,9 +517,9 @@ function CalendarPage(){
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768); // Define isMobile como true se a largura da tela for menor que 768px (você pode ajustar esse valor)
-      if (window.innerWidth >= 768) {
-        setIsMobile(false); // Fechar a drawer se a tela voltar a ser maior que 600px
+      setIsMobile(window.innerWidth < 600);
+      if (window.innerWidth >= 600) {
+        setIsMobile(false);
       }
     };
   
@@ -585,16 +589,16 @@ function CalendarPage(){
               </StyledToggleButtonGroup>
             )}
           </CalendarHeader>
-          <CalendarGrid view={view} isMobile={isMobile}>
+          <CalendarGrid view={view} isMobile={isMobile.toString()}>
             {daysInMonth.map((day) => (
               <CalendarDay
                 key={day.toString()}
                 isCurrentMonth={isSameMonth(day, currentDate)}
                 isToday={isSameDay(day, new Date())}
                 onClick={() => handleDrawerOpen(day)}
-                isMobile={isMobile}
+                isMobile={isMobile.toString()}
               >
-                <CalendarDayLabel isMobile={isMobile}>{convertDate(day, 'd')}</CalendarDayLabel>
+                <CalendarDayLabel isMobile={isMobile.toString()}>{convertDate(day, 'd')}</CalendarDayLabel>
                 <Box sx={{ overflow: 'hidden', width: '100%' }}>
                   {mainEvents
                     .filter((event) => isSameDay(parseISO(event.date), day))
