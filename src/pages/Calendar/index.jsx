@@ -265,6 +265,10 @@ function CalendarPage(){
     desc: '',
     date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
     ready: false,
+    pendding_notifi: true,
+    loop: true,
+    time_to_dispatch: 3.0,
+    private: false
   });
 
   const convertDate = (date = new Date(), pattern = "") => {
@@ -295,6 +299,10 @@ function CalendarPage(){
       desc: '',
       date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
       ready: false,
+      pendding_notifi: true,
+      loop: true,
+      time_to_dispatch: 3.0,
+      private: false
     });
     setIsTaskModalOpen(false);
     setUpdate(true);
@@ -311,6 +319,9 @@ function CalendarPage(){
       desc: '',
       date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
       ready: false,
+      pendding_notifi: true,
+      loop: true,
+      time_to_dispatch: 3.0,
       private: false
     });
     setIsTaskModalOpen(false);
@@ -325,6 +336,10 @@ function CalendarPage(){
         desc: '',
         date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
         ready: false,
+        pendding_notifi: true,
+        loop: true,
+        time_to_dispatch: 3.0,
+        private: false
       });
       setIsTaskModalOpen(false);
     }
@@ -748,6 +763,10 @@ function CalendarPage(){
                       desc: '',
                       date: convertDate(new Date(), "yyyy-MM-dd'T'HH:mm"),
                       ready: false,
+                      pendding_notifi: true,
+                      loop: true,
+                      time_to_dispatch: 3.0,
+                      private: false
                     });
                     setTimeout(() => {
                       setIsTaskModalOpen(true);
@@ -820,6 +839,52 @@ function CalendarPage(){
                       },
                     }}
                     required
+                  />
+
+                  <TextFieldStyled
+                    margin="dense"
+                    label="Intervalo das notificações"
+                    type="number"
+                    fullWidth
+                    variant="standard"
+                    value={taskFormData.time_to_dispatch}
+                    onChange={(e) =>
+                      handleTaskFormChange('time_to_dispatch', e.target.value)
+                    }
+                    slotProps={{
+                      inputLabel: {
+                        shrink: 'true',
+                      },
+                    }}
+                    required
+                  />
+
+                  <FormControlLabel
+                    name="pendding_notifi"
+                    control={
+                      <Checkbox
+                        checked={taskFormData.pendding_notifi ?? false}
+                        onChange={(e) =>
+                          handleEventFormChange('pendding_notifi', e.target.checked)
+                        }
+                      />
+                    }
+                    label="Notificação de pendencia?"
+                    style={{ color: theme.palette.text.third }}
+                  />
+
+                  <FormControlLabel
+                    name="loop"
+                    control={
+                      <Checkbox
+                        checked={taskFormData.loop ?? false}
+                        onChange={(e) =>
+                          handleEventFormChange('loop', e.target.checked)
+                        }
+                      />
+                    }
+                    label="Notificação única?"
+                    style={{ color: theme.palette.text.third }}
                   />
 
                   {taskFormData.id ? (
