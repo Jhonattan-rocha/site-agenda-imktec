@@ -6,7 +6,7 @@ function NoPage(){
   const navigate = useNavigate();
 
   const handleGoHome = () => {
-    navigate('/home');
+    navigate('/calendar');
   };
 
   return (
@@ -44,7 +44,7 @@ function NoPage(){
           onClick={handleGoHome}
           sx={{ marginTop: '24px', padding: '10px 24px', borderRadius: '8px', width: 300 }}
         >
-          Voltar para Home
+          Voltar para o Calendário
         </Button>
       </Box>
     </Container>

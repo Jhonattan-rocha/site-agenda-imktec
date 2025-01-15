@@ -31,6 +31,7 @@ import { styled } from '@mui/system';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Routes, Route, Link as RouterLink, useNavigate } from 'react-router-dom';
 import Login from '../Login';
+import NoPage from '../NoPage';
 import CalendarPage from '../Calendar';
 import { useDispatch, useSelector } from 'react-redux';
 import UsersPage from '../Users';
@@ -42,6 +43,7 @@ import * as generic_actions from '../../store/modules/genericReducer/actions';
 import hasPermission from '../../services/has_permission';
 
 // Estilos personalizados
+// Estilos personalizados
 const StyledAppBar = styled(AppBar)(({ theme, expanded, isMobile }) => ({
   width: isMobile === "true" ? '100%' : expanded === "true" ? 250 : 64,
   transition: theme.transitions.create(['width', 'margin'], {
@@ -52,28 +54,38 @@ const StyledAppBar = styled(AppBar)(({ theme, expanded, isMobile }) => ({
   boxShadow: theme.shadows[2],
   zIndex: theme.zIndex.drawer + 1,
   left: 0,
-  height: isMobile === "true" ? 'auto' : '100%', // Altura automática em dispositivos móveis
+  height: isMobile === "true" ? 'auto' : '100%',
 }));
 
 const StyledToolbar = styled(Toolbar)(({ theme, isMobile }) => ({
   display: 'flex',
-  flexDirection: isMobile === "true" ? 'row' : 'column', // Linha em dispositivos móveis, coluna em desktop
-  alignItems: isMobile === "true" ? "flex-end":'center',
+  flexDirection: isMobile === "true" ? 'row' : 'column',
+  alignItems: 'center',
   padding: theme.spacing(2),
   minHeight: '64px !important',
-  justifyContent: isMobile === "true" ? 'space-between' : 'center', // Espaço entre os itens em dispositivos móveis
+  justifyContent: isMobile === "true" ? 'flex-start' : 'center',
+  // Centralizar verticalmente em mobile
+  height: isMobile === "true" ? 'auto' : 'fit-content',
 }));
 
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
+const StyledAvatar = styled(Avatar)(({ theme, isMobile }) => ({
   width: theme.spacing(7),
   height: theme.spacing(7),
   marginBottom: theme.spacing(2),
   border: `2px solid ${theme.palette.primary.main}`,
+  // Adicionado para mobile
+  alignSelf: isMobile === "true" ? 'flex-start' : 'center',
+  marginTop: isMobile === "true" ? theme.spacing(1) : 0,
 }));
 
 const MenuOptions = styled(List)(({ theme }) => ({
   width: '100%',
   paddingTop: 0,
+  // Adicionado para ocupar todo o espaço disponível e para o alinhamento dos itens
+  flexGrow: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'flex-start', // Alinhar os itens ao topo
 }));
 
 const MenuItem = styled(ListItem)(({ theme, expanded }) => ({
@@ -92,7 +104,11 @@ const MenuItem = styled(ListItem)(({ theme, expanded }) => ({
     display: 'flex',
     alignItems: 'center',
   },
-  textAlign: 'center'
+  textAlign: 'center',
+  // Adicionado para ocupar todo o espaço disponível e centralizar verticalmente
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
 }));
 
 const MenuItemIcon = styled(ListItemIcon)(({ theme, expanded }) => ({
@@ -100,6 +116,8 @@ const MenuItemIcon = styled(ListItemIcon)(({ theme, expanded }) => ({
   marginRight: expanded === "true" ? theme.spacing(2) : 'auto',
   justifyContent: 'center',
   color: theme.palette.text.secondary,
+  // Adicionado para o alinhamento dos ícones
+  marginBottom: 0, 
 }));
 
 const MenuItemText = styled(ListItemText)(({ theme }) => ({
@@ -111,19 +129,24 @@ const AppContainer = styled(Grid)(({ theme }) => ({
   height: '100vh',
   width: '100vw',
   backgroundColor: theme.palette.background.default,
-  overflowX: 'hidden' // Evitar barra de rolagem horizontal
+  overflow: 'hidden' 
 }));
 
 const Content = styled(Box)(({ theme, expanded, isMobile }) => ({
   flexGrow: 1,
   padding: isMobile === "true" ? theme.spacing(1.5) : theme.spacing(3),
-  transition: theme.transitions.create('margin', {
+  transition: theme.transitions.create(['margin', 'width'], {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  marginLeft: isMobile === "true" ? 0 : expanded === "true" ? 250 : 20, // Sem margem esquerda em dispositivos móveis
-  marginTop: isMobile === "true" ? 56 : isMobile === "true" ? 0 : 20, // Margem superior ajustada para dispositivos móveis
+  marginLeft: isMobile === "true" ? 0 : expanded === "true" ? 250 : 64,
+  // Ajuste para o novo marginTop
+  marginTop: isMobile === "true" ? `calc(56px + ${theme.spacing(2)})` : theme.spacing(2),
+  width: isMobile === "true" ? '100%' : `calc(100% - ${expanded === "true" ? 250 : 64}px)`,
   backgroundColor: theme.palette.background.default,
+  // Adicionado para evitar que o conteúdo fique sob o Drawer
+  position: 'relative',
+  zIndex: 1,
 }));
 
 const NotificationsPopover = styled(Popover)(({ theme }) => ({
@@ -196,9 +219,9 @@ const StyledDrawer = styled(Drawer)(({ theme }) => ({
   '& .MuiDrawer-paper': {
     width: 250,
     boxSizing: 'border-box',
-    backgroundColor: theme.palette.secondary.main, // Cor de fundo do menu
-    color: theme.palette.text.primary, // Cor do texto do menu
-  },
+    backgroundColor: theme.palette.secondary.main, 
+    color: theme.palette.text.primary,
+  }
 }));
 
 function Home() {
@@ -351,7 +374,7 @@ function Home() {
               >
                 <ArrowLeft />
               </IconButton>
-              <StyledAvatar alt="User Name" />
+              <StyledAvatar ismobile={isMobile.toString()} alt="User Name" />
               <Typography variant="h6" noWrap color="text.primary">
                 {user.user.name}
               </Typography>
@@ -437,7 +460,7 @@ function Home() {
                   >
                     {expanded ? <ArrowLeft /> : <ArrowRight />}
                   </IconButton>
-                  <StyledAvatar alt="User Name" />
+                  <StyledAvatar ismobile={isMobile.toString()} alt="User Name" />
                   {expanded && (
                     <Typography variant="h6" noWrap color="text.primary">
                       {user.user.name}
@@ -448,7 +471,9 @@ function Home() {
 
               <Grid
                 container
-                justifyContent={isMobile ? 'flex-end' : 'center'}
+                display={'flex'}
+                justifyContent={'flex-start'}
+                flexDirection={'column'}
                 spacing={1}
                 sx={{ mt: isMobile ? 0 : 2, mb: isMobile ? 0 : 2, flexGrow: 1 }}
               >
@@ -456,7 +481,7 @@ function Home() {
                   <Tooltip title="Open user menu" arrow>
                     <IconButton
                       onClick={handleOpenUserMenu}
-                      sx={{ p: 0, width: 40 }}
+                      sx={{ width: 40 }}
                     >
                       <AccountCircle color="primary" fontSize="large" />
                     </IconButton>
@@ -632,13 +657,14 @@ function Home() {
       <Content expanded={expanded.toString()} ismobile={isMobile.toString()}>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/calendar" element={<CalendarPage />} index={true} />
           {hasPermission(user.user.profile, 'Usuários', 'can_view') && (
             <Route path="/users" element={<UsersPage />} />
           )}
           {hasPermission(user.user.profile, 'perfís', 'can_view') && (
             <Route path="/profiles" element={<ProfilesPage />} />
           )}
+          <Route path='*' element={<NoPage></NoPage>} />
         </Routes>
       </Content>
     </AppContainer>

@@ -84,7 +84,6 @@ const CalendarHeader = styled('div')(({ theme }) => ({
   backgroundColor: theme.palette.background.paper,
   color: theme.palette.text.third,
   borderBottom: `1px solid ${theme.palette.divider}`,
-  marginLeft: 25
 }));
 
 // Estilos
@@ -134,7 +133,6 @@ const CalendarGrid = styled('div')(({ theme, view, isMobile }) => ({
   overflow: isMobile === "true" ? 'scroll' : 'hidden',
   overflowX: 'hidden',
   height: '75vh',
-  marginLeft: 10
 }));
 
 const StyledToggleButtonGroup = styled(ToggleButtonGroup)(({ theme }) => ({
@@ -424,9 +422,13 @@ function CalendarPage(){
   const daysInMonth = useMemo(() => {
     if (view === 'month') {
       let date_aux = endOfMonth(currentDate);
+      let qtd_days_ins_calendar = date_aux.getDate() + (countCols - (date_aux.getDate() % countCols));
+      if(isMobile){
+        qtd_days_ins_calendar += 1;
+      }
       return eachDayOfInterval({
         start: startOfMonth(currentDate),
-        end: date_aux.setDate(date_aux.getDate() + (countCols - (date_aux.getDate() % countCols))),
+        end: date_aux.setDate(qtd_days_ins_calendar),
       });
     } else {
       return eachDayOfInterval({
